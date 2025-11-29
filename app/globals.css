@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply text-slate-900 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e0f2fe 50%, #f3e8ff 75%, #f8fafc 100%);
+    background-size: 400% 400%;
+    background-attachment: fixed;
+    animation: gradientShift 20s ease infinite;
+  }
+  
+  /* Melhorar touch em mobile */
+  button, a {
+    touch-action: manipulation;
+  }
+  
+  /* Seleção de texto personalizada */
+  ::selection {
+    @apply bg-primary-200 text-primary-900;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-md shadow-sm border border-slate-200;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .card-hover:hover {
+    @apply shadow-md border-slate-300/60;
+  }
+  
+  .card-hover:active {
+    @apply shadow-sm;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 
+           rounded-md font-medium
+           transition-all duration-200 ease-out
+           hover:bg-primary-700 
+           active:bg-primary-600
+           disabled:opacity-40 disabled:cursor-not-allowed
+           touch-manipulation;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-primary-600 px-5 py-2.5 sm:px-6 sm:py-3 rounded-md font-medium 
+           border border-primary-200
+           transition-all duration-200 ease-out
+           hover:bg-primary-50 hover:border-primary-300
+           active:bg-white touch-manipulation;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-md border border-slate-300 
+           bg-white
+           focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500
+           transition-all duration-200 ease-out placeholder:text-slate-400 text-base;
+  }
+  
+  .input-field:hover {
+    @apply border-slate-400;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-success-100 text-success-700 border border-success-200;
+  }
+  
+  .badge-warning {
+    @apply badge bg-warning-100 text-warning-700 border border-warning-200;
+  }
+  
+  .badge-danger {
+    @apply badge bg-danger-100 text-danger-700 border border-danger-200;
+  }
+  
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-700 border border-primary-200;
+  }
+}
+
+/* Animações suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
