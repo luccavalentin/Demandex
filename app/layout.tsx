@@ -4,6 +4,13 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'DemandeX - Gerenciando sua vida com inteligência',
   description: 'Aplicativo completo de gestão de vida para estudantes',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export const viewport: Viewport = {
