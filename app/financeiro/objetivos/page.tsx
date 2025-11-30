@@ -4,7 +4,7 @@ import React from 'react'
 import { MainLayout } from '@/components/Layout/MainLayout'
 import Link from 'next/link'
 import { Card } from '@/components/UI/Card'
-import { Target, ArrowRight } from 'lucide-react'
+import { Target } from 'lucide-react'
 
 export default function ObjetivosFinanceirosPage() {
   return (
@@ -26,24 +26,21 @@ export default function ObjetivosFinanceirosPage() {
           </div>
         </div>
 
-        <Card className="p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Target className="text-primary-600" size={32} />
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Metas Financeiras
-              </h2>
-              <p className="text-slate-600">
-                Defina e acompanhe suas metas financeiras
-              </p>
+        <Link href="/financeiro/metas" className="block">
+          <Card hover className="p-6 cursor-pointer">
+            <div className="flex items-center gap-4">
+              <Target className="text-primary-600" size={32} />
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Metas Financeiras
+                </h2>
+                <p className="text-slate-600">
+                  Defina e acompanhe suas metas financeiras
+                </p>
+              </div>
             </div>
-          </div>
-          <Link href="/financeiro/metas">
-            <div className="flex items-center text-primary-600 font-medium hover:text-primary-700 transition-colors">
-              Acessar Metas <ArrowRight size={16} className="ml-2" />
-            </div>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
       </div>
     </MainLayout>
   )

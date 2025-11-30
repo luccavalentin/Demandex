@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { MainLayout } from '@/components/Layout/MainLayout'
 import { Card } from '@/components/UI/Card'
 import { Logo } from '@/components/UI/Logo'
@@ -14,6 +14,10 @@ import {
   TrendingDown,
   ArrowRight,
   Sparkles,
+  X,
+  UtensilsCrossed,
+  Dumbbell,
+  Moon,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
@@ -21,6 +25,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export default function Dashboard() {
+  const [flippedCard, setFlippedCard] = useState<string | null>(null)
   const {
     meals,
     workouts,
@@ -144,25 +149,26 @@ export default function Dashboard() {
         {/* Main Cards - Resumo Financeiro e Tarefas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
           {/* Resumo Financeiro */}
-          <Card className="p-5 sm:p-6 animate-fade-in relative overflow-hidden" style={{ animationDelay: '0.1s' }}>
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 dark:from-primary-900/20 via-transparent to-transparent pointer-events-none" />
-            
-            <Link href="/financeiro" className="group">
-              <div className="flex items-center justify-between mb-6 relative">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg ring-2 ring-primary-200/50">
-                    <DollarSign className="text-white" size={20} strokeWidth={2.5} />
+          <div 
+            className="card-flip-container animate-fade-in" 
+            style={{ animationDelay: '0.1s' }}
+            onClick={() => setFlippedCard(flippedCard === 'financeiro' ? null : 'financeiro')}
+          >
+            <div className={cn('card-flip', flippedCard === 'financeiro' && 'flipped')}>
+              {/* Frente */}
+              <div className="card-front">
+                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
+                  {/* Background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 dark:from-primary-900/20 via-transparent to-transparent pointer-events-none" />
+                  
+                  <div className="flex items-center gap-3 mb-6 relative">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg ring-2 ring-primary-200/50">
+                      <DollarSign className="text-white" size={20} strokeWidth={2.5} />
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                      Resumo Financeiro
+                    </h2>
                   </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                    Resumo Financeiro
-                  </h2>
-                </div>
-                <div className="text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-200 flex items-center gap-1">
-                  Ver detalhes
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
-                </div>
-              </div>
               
               {/* Indicador de saldo geral */}
               <div className={cn(
@@ -205,10 +211,10 @@ export default function Dashboard() {
                       <p className="text-sm font-bold text-slate-900 mb-1">Total de Receitas</p>
                       <p className="text-xl sm:text-2xl font-bold text-success-700 break-words">
                         R$ {totalIncome.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between p-3 bg-gradient-to-br from-danger-50/90 to-danger-100/80 rounded-lg border border-danger-200/70 hover:border-danger-300/70 hover:shadow-md transition-all duration-300 group">
                   <div className="flex items-center gap-3">
@@ -222,33 +228,98 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                      </div>
-                  </div>
-            </Link>
+                </div>
+              </div>
                 </Card>
+              </div>
+              
+              {/* Verso - Detalhamento */}
+              <div className="card-back">
+                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 dark:from-primary-900/20 via-transparent to-transparent pointer-events-none" />
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg ring-2 ring-primary-200/50">
+                        <DollarSign className="text-white" size={20} strokeWidth={2.5} />
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                        Detalhes Financeiros
+                      </h2>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setFlippedCard(null)
+                      }}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      <X size={20} className="text-slate-600 dark:text-slate-300" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Total de Transações</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{transactions.length}</p>
+                    </div>
+                    <div className="p-3 bg-success-50 dark:bg-success-900/20 rounded-lg">
+                      <p className="text-sm font-semibold text-success-700 dark:text-success-300 mb-2">Receitas</p>
+                      <p className="text-xl font-bold text-success-700 dark:text-success-400">R$ {totalIncome.toFixed(2)}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {transactions.filter(t => t.type === 'income').length} transação(ões)
+                      </p>
+                    </div>
+                    <div className="p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
+                      <p className="text-sm font-semibold text-danger-700 dark:text-danger-300 mb-2">Despesas</p>
+                      <p className="text-xl font-bold text-danger-700 dark:text-danger-400">R$ {totalExpenses.toFixed(2)}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {transactions.filter(t => t.type === 'expense').length} transação(ões)
+                      </p>
+                    </div>
+                    <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                      <p className="text-sm font-semibold text-primary-700 dark:text-primary-300 mb-2">Metas Financeiras</p>
+                      <p className="text-xl font-bold text-primary-700 dark:text-primary-400">
+                        {completedFinancialGoals}/{financialGoals.length || 0}
+                      </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {financialProgress}% concluído
+                      </p>
+                    </div>
+                    <Link 
+                      href="/financeiro" 
+                      onClick={(e) => e.stopPropagation()}
+                      className="block mt-4 p-3 bg-primary-600 hover:bg-primary-700 text-white text-center rounded-lg font-semibold transition-colors"
+                    >
+                      Ver página completa →
+                    </Link>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </div>
 
           {/* Tarefas */}
-          <Card className="p-5 sm:p-6 animate-fade-in relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-warning-50/30 dark:from-warning-900/20 via-transparent to-transparent pointer-events-none" />
-            
-            <div className="flex items-center justify-between mb-4 relative">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-md ring-1 ring-warning-200/50">
-                  <CheckSquare className="text-white" size={16} strokeWidth={2.5} />
-        </div>
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                Tarefas Recentes
-              </h2>
-              </div>
-              <Link
-                href="/produtividade/tarefas"
-                className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-200 flex items-center gap-1 group"
-              >
-                Ver todas
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
-              </Link>
-            </div>
+          <div 
+            className="card-flip-container animate-fade-in" 
+            style={{ animationDelay: '0.2s' }}
+            onClick={() => setFlippedCard(flippedCard === 'tarefas' ? null : 'tarefas')}
+          >
+            <div className={cn('card-flip', flippedCard === 'tarefas' && 'flipped')}>
+              {/* Frente */}
+              <div className="card-front">
+                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
+                  {/* Background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-warning-50/30 dark:from-warning-900/20 via-transparent to-transparent pointer-events-none" />
+                  
+                  <div className="flex items-center gap-2 mb-4 relative">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-md ring-1 ring-warning-200/50">
+                      <CheckSquare className="text-white" size={16} strokeWidth={2.5} />
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                      Tarefas Recentes
+                    </h2>
+                  </div>
             
             {/* Estatísticas rápidas */}
             <div className="grid grid-cols-2 gap-2 mb-4 relative z-10">
@@ -344,6 +415,69 @@ export default function Dashboard() {
               )}
             </div>
           </Card>
+              </div>
+              
+              {/* Verso - Detalhamento */}
+              <div className="card-back">
+                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-br from-warning-50/30 dark:from-warning-900/20 via-transparent to-transparent pointer-events-none" />
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-md ring-1 ring-warning-200/50">
+                        <CheckSquare className="text-white" size={16} strokeWidth={2.5} />
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                        Detalhes de Tarefas
+                      </h2>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setFlippedCard(null)
+                      }}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      <X size={20} className="text-slate-600 dark:text-slate-300" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                        <p className="text-xs font-semibold text-primary-700 dark:text-primary-300 mb-1">Pendentes</p>
+                        <p className="text-2xl font-bold text-primary-700 dark:text-primary-400">{todayTasks}</p>
+                      </div>
+                      <div className="p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
+                        <p className="text-xs font-semibold text-danger-700 dark:text-danger-300 mb-1">Atrasadas</p>
+                        <p className="text-2xl font-bold text-danger-700 dark:text-danger-400">{overdueTasks}</p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Total de Tarefas</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{tasks.length}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {tasks.filter(t => t.status === 'done').length} concluídas
+                      </p>
+                    </div>
+                    <div className="p-3 bg-warning-50 dark:bg-warning-900/20 rounded-lg">
+                      <p className="text-sm font-semibold text-warning-700 dark:text-warning-300 mb-2">Em Andamento</p>
+                      <p className="text-xl font-bold text-warning-700 dark:text-warning-400">
+                        {tasks.filter(t => t.status === 'in-progress').length}
+                      </p>
+                    </div>
+                    <Link 
+                      href="/produtividade/tarefas" 
+                      onClick={(e) => e.stopPropagation()}
+                      className="block mt-4 p-3 bg-warning-600 hover:bg-warning-700 text-white text-center rounded-lg font-semibold transition-colors"
+                    >
+                      Ver página completa →
+                    </Link>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid - Saúde e Produtividade */}
@@ -353,43 +487,42 @@ export default function Dashboard() {
             const gradientColor = stat.color === 'from-success-500 to-success-600' ? 'from-success-50/30' :
                                  stat.color === 'from-warning-500 to-warning-600' ? 'from-warning-50/30' :
                                  'from-primary-50/30'
+            const cardId = stat.title.toLowerCase().replace(/\s+/g, '-')
             
             return (
-              <Card 
+              <div 
                 key={stat.title}
-                className="p-5 sm:p-6 animate-fade-in relative overflow-hidden" 
+                className="card-flip-container animate-fade-in" 
                 style={{ animationDelay: `${0.4 + index * 0.1}s` }}
+                onClick={() => setFlippedCard(flippedCard === cardId ? null : cardId)}
               >
-                {/* Background gradient */}
-                <div className={cn(
-                  'absolute inset-0 bg-gradient-to-br pointer-events-none',
-                  gradientColor,
-                  'dark:opacity-20 via-transparent to-transparent'
-                )} />
-                
-                <div className="flex items-center justify-between mb-4 relative">
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      'w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ring-1',
-                      stat.color,
-                      stat.color === 'from-success-500 to-success-600' ? 'ring-success-200/50' :
-                      stat.color === 'from-warning-500 to-warning-600' ? 'ring-warning-200/50' :
-                      'ring-primary-200/50'
-                    )}>
-                      <Icon className="text-white" size={16} strokeWidth={2.5} />
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                      {stat.title}
-              </h2>
-                  </div>
-              <Link
-                    href={stat.href}
-                    className="text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-200 flex items-center gap-1 group"
-              >
-                Ver detalhes
-                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
-              </Link>
-            </div>
+                <div className={cn('card-flip', flippedCard === cardId && 'flipped')}>
+                  {/* Frente */}
+                  <div className="card-front">
+                    <Card 
+                      className="p-5 sm:p-6 relative overflow-hidden cursor-pointer h-full"
+                    >
+                      {/* Background gradient */}
+                      <div className={cn(
+                        'absolute inset-0 bg-gradient-to-br pointer-events-none',
+                        gradientColor,
+                        'dark:opacity-20 via-transparent to-transparent'
+                      )} />
+                      
+                      <div className="flex items-center gap-2 mb-4 relative">
+                        <div className={cn(
+                          'w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ring-1',
+                          stat.color,
+                          stat.color === 'from-success-500 to-success-600' ? 'ring-success-200/50' :
+                          stat.color === 'from-warning-500 to-warning-600' ? 'ring-warning-200/50' :
+                          'ring-primary-200/50'
+                        )}>
+                          <Icon className="text-white" size={16} strokeWidth={2.5} />
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                          {stat.title}
+                        </h2>
+                      </div>
 
                 {/* Barra de progresso geral */}
                 {stat.progress !== undefined && (
@@ -501,7 +634,97 @@ export default function Dashboard() {
                     )
                   })}
             </div>
-          </Card>
+                    </Card>
+                  </div>
+                  
+                  {/* Verso - Detalhamento */}
+                  <div className="card-back">
+                    <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
+                      <div className={cn(
+                        'absolute inset-0 bg-gradient-to-br pointer-events-none',
+                        gradientColor,
+                        'dark:opacity-20 via-transparent to-transparent'
+                      )} />
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            'w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ring-1',
+                            stat.color,
+                            stat.color === 'from-success-500 to-success-600' ? 'ring-success-200/50' :
+                            stat.color === 'from-warning-500 to-warning-600' ? 'ring-warning-200/50' :
+                            'ring-primary-200/50'
+                          )}>
+                            <Icon className="text-white" size={16} strokeWidth={2.5} />
+                          </div>
+                          <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                            Detalhes de {stat.title}
+                          </h2>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setFlippedCard(null)
+                          }}
+                          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                        >
+                          <X size={20} className="text-slate-600 dark:text-slate-300" />
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {stat.progress !== undefined && (
+                          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Progresso Geral</p>
+                            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.progress}%</p>
+                            <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-2">
+                              <div 
+                                className={cn('h-full rounded-full transition-all duration-500', stat.progressColor)}
+                                style={{ width: `${stat.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {stat.items.map((item: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {item.icon && <span className="text-lg">{item.icon}</span>}
+                                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{item.label}</p>
+                              </div>
+                              <p className={cn(
+                                'text-lg font-bold',
+                                item.warning ? 'text-danger-700 dark:text-danger-400' :
+                                item.highlight ? (item.positive ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400') :
+                                'text-slate-900 dark:text-white'
+                              )}>
+                                {item.value}
+                              </p>
+                            </div>
+                            {item.target && (
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                Meta: {item.target}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                        <Link 
+                          href={stat.href} 
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn(
+                            "block mt-4 p-3 text-white text-center rounded-lg font-semibold transition-colors",
+                            stat.color === 'from-success-500 to-success-600' ? 'bg-success-600 hover:bg-success-700' :
+                            stat.color === 'from-warning-500 to-warning-600' ? 'bg-warning-600 hover:bg-warning-700' :
+                            'bg-primary-600 hover:bg-primary-700'
+                          )}
+                        >
+                          Ver página completa →
+                        </Link>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              </div>
             )
           })}
         </div>

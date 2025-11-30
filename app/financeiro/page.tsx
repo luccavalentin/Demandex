@@ -4,7 +4,7 @@ import React from 'react'
 import { MainLayout } from '@/components/Layout/MainLayout'
 import { Card } from '@/components/UI/Card'
 import Link from 'next/link'
-import { Wallet, Target, PiggyBank, TrendingUp, ArrowRight, DollarSign } from 'lucide-react'
+import { Wallet, Target, PiggyBank, TrendingUp, DollarSign } from 'lucide-react'
 
 const financeModules = [
   {
@@ -69,10 +69,7 @@ export default function FinanceiroPage() {
                   <h3 className="text-xl font-semibold text-slate-900 mb-2">
                     {module.title}
                   </h3>
-                  <p className="text-slate-600 mb-4">{module.description}</p>
-                  <div className="flex items-center text-primary-600 font-medium">
-                    Acessar <ArrowRight size={16} className="ml-2" />
-                  </div>
+                  <p className="text-slate-600">{module.description}</p>
                 </Card>
               </Link>
             )
