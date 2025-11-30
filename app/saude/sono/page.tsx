@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import type { Sleep } from '@/types'
 import { Plus, Trash2, Edit2, Star, Moon } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function SonoPage() {
   const { sleeps, addSleep, updateSleep, deleteSleep } = useStore()

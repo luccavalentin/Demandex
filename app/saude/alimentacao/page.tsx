@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import type { Meal } from '@/types'
 import { Plus, Trash2, Edit2, UtensilsCrossed } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function AlimentacaoPage() {
   const { meals, addMeal, updateMeal, deleteMeal } = useStore()

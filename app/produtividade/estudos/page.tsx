@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import type { StudyArea, Subject, Class } from '@/types'
 import { Plus, Trash2, Edit2, ChevronDown, ChevronRight, BookOpen, Timer } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function EstudosPage() {
   const { studyAreas, addStudyArea, updateStudyArea, deleteStudyArea, addSubject, updateSubject, deleteSubject, addClass, updateClass, deleteClass, addPomodoro } = useStore()

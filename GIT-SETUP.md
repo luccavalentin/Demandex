@@ -1,3 +1,4 @@
+
 # Configuração do Git
 
 Para salvar as alterações no Git, execute os seguintes comandos no terminal, dentro do diretório do projeto:

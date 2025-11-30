@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import type { PersonalProject } from '@/types'
 import { Plus, Trash2, Edit2, FolderKanban, CheckSquare } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function ProjetosPage() {
   const { personalProjects, tasks, addPersonalProject, updatePersonalProject, deletePersonalProject } = useStore()

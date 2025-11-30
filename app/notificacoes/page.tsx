@@ -7,7 +7,7 @@ import { Button } from '@/components/UI/Button'
 import { useStore } from '@/lib/store'
 import { Bell, Trash2, CheckCircle2, UtensilsCrossed, Dumbbell, BookOpen, Moon, CheckSquare, DollarSign } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 import Link from 'next/link'
 
 const notificationIcons = {

@@ -10,7 +10,7 @@ import { useStore } from '@/lib/store'
 import type { AttractionGoal } from '@/types'
 import { Plus, Trash2, Sparkles, Image as ImageIcon, Link as LinkIcon, Lightbulb } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function MuralPage() {
   const { attractionGoals, updateAttractionGoal, deleteAttractionGoal } = useStore()

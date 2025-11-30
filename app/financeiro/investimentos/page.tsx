@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import type { Investment } from '@/types'
 import { Plus, Trash2, Edit2, TrendingUp } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function InvestimentosPage() {
   const { investments, addInvestment, updateInvestment, deleteInvestment } = useStore()

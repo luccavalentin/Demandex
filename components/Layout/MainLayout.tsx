@@ -28,10 +28,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed }}>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen relative">
         <Sidebar />
-        <main className="flex-1 min-w-0 min-h-screen transition-all duration-300">
-          <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
+        <main 
+          className={cn(
+            'flex-1 min-w-0 min-h-screen transition-all duration-100',
+            isCollapsed ? 'lg:ml-20' : 'lg:ml-80'
+          )}
+        >
+          <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-[90rem] mx-auto w-full">
             {children}
           </div>
         </main>

@@ -47,10 +47,10 @@ export default function ProdutividadePage() {
               <CheckSquare className="text-white" size={28} strokeWidth={2} />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-1">
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">
                 Produtividade
               </h1>
-              <p className="text-base text-slate-600 font-medium">
+              <p className="text-base text-slate-600 dark:text-white font-medium">
                 Organize suas tarefas, estudos e projetos
               </p>
             </div>

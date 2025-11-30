@@ -52,7 +52,7 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
       
       {showText && (
-        <div>
+        <div className="text-center">
           <h1 className={cn(
             'font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800',
             'bg-clip-text text-transparent tracking-tight',
@@ -61,8 +61,11 @@ export const Logo: React.FC<LogoProps> = ({
             DemandeX
           </h1>
           {size !== 'sm' && (
-            <p className="text-xs text-slate-600 mt-0.5 font-medium">
-              Gerenciando sua vida com inteligência
+            <p className="text-base sm:text-lg md:text-xl mt-3 font-semibold italic tracking-wide leading-relaxed max-w-xs mx-auto px-4 relative">
+              <span className="text-slate-700 drop-shadow-sm">
+                Gerenciando sua vida com{' '}
+                <span className="text-primary-600 font-bold">inteligência</span>
+              </span>
             </p>
           )}
         </div>

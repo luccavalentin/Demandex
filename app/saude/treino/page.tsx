@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import type { Workout } from '@/types'
 import { Plus, Trash2, Edit2, Dumbbell } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale/pt-BR'
+import ptBR from 'date-fns/locale/pt-BR'
 
 export default function TreinoPage() {
   const { workouts, addWorkout, updateWorkout, deleteWorkout } = useStore()

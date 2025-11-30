@@ -10,14 +10,17 @@
   }
   
   body {
-    @apply text-slate-900 antialiased;
+    @apply text-slate-900 dark:text-white antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e0f2fe 50%, #f3e8ff 75%, #f8fafc 100%);
-    background-size: 400% 400%;
     background-attachment: fixed;
-    animation: gradientShift 20s ease infinite;
+  }
+  
+  .dark body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #1e3a8a 50%, #312e81 75%, #0f172a 100%);
+    background-attachment: fixed;
   }
   
   /* Melhorar touch em mobile */
@@ -27,25 +30,55 @@
   
   /* Seleção de texto personalizada */
   ::selection {
-    @apply bg-primary-200 text-primary-900;
+    @apply bg-primary-200 dark:bg-primary-800 text-primary-900 dark:text-primary-100;
+  }
+  
+  /* Scrollbar dark mode */
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-slate-800/50;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-slate-600;
+    background: linear-gradient(180deg, #475569 0%, #334155 100%);
+  }
+  
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
+    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-md shadow-sm border border-slate-200;
+    @apply bg-white rounded-2xl shadow-soft border border-slate-200/80;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04), 
+                0 8px 16px -4px rgba(0, 0, 0, 0.02),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  }
+  
+  .dark .card {
+    @apply bg-white border-slate-200/80;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 
+                0 8px 16px -4px rgba(0, 0, 0, 0.05);
+    background-color: rgb(255 255 255) !important; /* Sempre branco no modo escuro */
   }
   
   .card-hover {
-    @apply transition-all duration-200 ease-out;
+    @apply transition-all duration-150 ease-out;
   }
   
   .card-hover:hover {
-    @apply shadow-md border-slate-300/60;
+    box-shadow: 0 2px 12px -3px rgba(0, 0, 0, 0.06), 
+                0 8px 16px -4px rgba(0, 0, 0, 0.03),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+    @apply border-slate-300/40;
+    transform: translateY(-1px);
   }
   
   .card-hover:active {
-    @apply shadow-sm;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.06);
+    transform: translateY(0);
   }
   
   .btn-primary {
@@ -102,9 +135,33 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -121,7 +178,18 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+  opacity: 0;
 }
 
 /* Scrollbar personalizada mais elegante */
