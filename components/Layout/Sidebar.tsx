@@ -15,7 +15,6 @@ import {
   UtensilsCrossed,
   Dumbbell,
   Moon,
-  Sun,
   Target,
   Wallet,
   TrendingUp,
@@ -29,7 +28,6 @@ import { cn } from '@/lib/utils'
 import { useStore } from '@/lib/store'
 import { Logo } from '@/components/UI/Logo'
 import { useSidebar } from './MainLayout'
-import { useTheme } from '@/components/Theme/ThemeProvider'
 
 const menuItems = [
   {
@@ -82,6 +80,7 @@ const menuItems = [
     gradient: 'from-purple-500 to-violet-500',
     submenu: [
       { title: 'Objetivos', href: '/lei-da-atracao/objetivos', icon: Lightbulb },
+      { title: 'Mural', href: '/lei-da-atracao/mural', icon: Sparkles },
       { title: 'Metas', href: '/lei-da-atracao/metas', icon: Target },
     ],
   },
@@ -94,21 +93,45 @@ export const Sidebar: React.FC = () => {
   const pathname = usePathname()
   const router = useRouter()
   const { notifications } = useStore()
-  const { theme, toggleTheme } = useTheme()
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications])
 
   useEffect(() => {
     // Fecha o menu mobile quando a rota muda
     setIsOpen(false)
+    
+    // Expande automaticamente os menus que contêm a página ativa
+    menuItems.forEach((item) => {
+      if (item.submenu) {
+        const hasActiveSubmenu = item.submenu.some((sub) => {
+          return pathname?.startsWith(sub.href)
+        })
+        if (hasActiveSubmenu) {
+          setExpandedMenus((prev) => {
+            if (!prev.includes(item.title)) {
+              return [...prev, item.title]
+            }
+            return prev
+          })
+        }
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  const toggleMenu = useCallback((menuTitle: string) => {
-    setExpandedMenus((prev) =>
-      prev.includes(menuTitle)
-        ? prev.filter((title) => title !== menuTitle)
-        : [...prev, menuTitle]
-    )
+  const toggleMenu = useCallback((menuTitle: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    setExpandedMenus((prev) => {
+      // Se o menu já está aberto, fecha
+      if (prev.includes(menuTitle)) {
+        return prev.filter((title) => title !== menuTitle)
+      }
+      // Se não está aberto, fecha todos os outros e abre apenas este
+      return [menuTitle]
+    })
   }, [])
 
   const isActive = useCallback((href: string, exact?: boolean) => {
@@ -120,24 +143,34 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
+      {/* Overlay para mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Mobile Menu Button */}
       <button
         className={cn(
-          'lg:hidden fixed top-4 left-4 z-50 p-3',
-          'bg-white dark:bg-slate-800 rounded-xl',
-          'shadow-lg hover:shadow-xl',
-          'border border-slate-200/50 dark:border-slate-700/50',
-          'transition-all duration-100 ease-out',
-          'active:scale-95'
+          'lg:hidden fixed top-4 left-4 z-50 p-3.5',
+          'bg-white/95 backdrop-blur-sm rounded-xl',
+          'shadow-xl hover:shadow-2xl',
+          'border border-slate-200/60',
+          'transition-all duration-200 ease-out',
+          'active:scale-95 hover:scale-105',
+          'cursor-pointer'
         )}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle menu"
       >
         <div className="relative w-5 h-5">
           {isOpen ? (
-            <X size={20} className="text-slate-700 dark:text-slate-200 transition-transform duration-100 rotate-180" />
+            <X size={21} className="text-primary-600 transition-all duration-200 rotate-180" />
           ) : (
-            <Menu size={20} className="text-slate-700 dark:text-slate-200 transition-transform duration-100" />
+            <Menu size={21} className="text-primary-600 transition-all duration-200" />
           )}
         </div>
       </button>
@@ -145,18 +178,19 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'bg-white dark:bg-slate-900',
-          'border-r border-slate-200/60 dark:border-slate-700/60',
+          'bg-white',
+          'border-r border-slate-200/40',
           'overflow-y-auto',
-          'transition-all duration-100 ease-out',
+          'transition-transform duration-300 ease-out',
           // Mobile: fixo e desliza (sobrepõe com overlay)
           'fixed inset-y-0 left-0 z-40',
+          'will-change-transform',
           'h-screen',
-          'shadow-xl',
+          'shadow-2xl',
           'transform',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           // Desktop: fixo e sempre visível
-          'lg:fixed lg:z-40 lg:shadow-xl lg:translate-x-0',
+          'lg:fixed lg:z-40 lg:shadow-2xl lg:translate-x-0',
           'lg:top-0 lg:left-0 lg:h-screen',
           // Larguras responsivas
           isCollapsed ? 'lg:w-20' : 'lg:w-80',
@@ -167,40 +201,45 @@ export const Sidebar: React.FC = () => {
         {/* Header */}
           <div
           className={cn(
-            'relative border-b border-slate-200/60 dark:border-slate-700/60',
-            'bg-gradient-to-br from-primary-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800',
-            'px-6 sm:px-8 py-7 sm:py-9',
-            isCollapsed && 'lg:px-3 lg:py-6'
+            'relative border-b border-slate-200/40',
+            'bg-gradient-to-br from-primary-50 via-white to-primary-50/30',
+            'px-6 sm:px-8 py-8 sm:py-10',
+            isCollapsed && 'lg:px-4 lg:py-7'
           )}
         >
           {/* Toggle button - sempre visível no desktop */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
-              'absolute top-2 right-2 z-50 p-2 rounded-lg',
-              'bg-white dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700',
-              'border border-slate-200/60 dark:border-slate-700/60',
-              'shadow-md hover:shadow-lg',
-              'transition-all duration-100 ease-out',
+              'absolute top-3 right-3 z-50 p-2.5 rounded-xl',
+              'bg-white/90 backdrop-blur-sm',
+              'border border-slate-200/60',
+              'shadow-lg hover:shadow-xl hover:scale-105',
+              'transition-all duration-200 ease-out',
               'lg:flex hidden items-center justify-center',
-              'active:scale-95'
+              'active:scale-95',
+              'cursor-pointer',
+              'hover:bg-white'
             )}
             aria-label={isCollapsed ? 'Expandir menu' : 'Colapsar menu'}
           >
-            <Menu size={16} className="text-slate-700 dark:text-slate-200" />
+            <Menu size={18} className="text-primary-600" />
           </button>
 
           {/* Logo e título */}
           {!isCollapsed && (
-            <div className="flex flex-col items-center gap-2 text-center">
-              <Logo size="lg" showText={false} />
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 dark:from-primary-400 dark:via-primary-300 dark:to-primary-400 bg-clip-text text-transparent">
+            <div className="flex flex-col items-center gap-3 text-center animate-fadeIn">
+              <div className="relative">
+                <Logo size="lg" showText={false} />
+                <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-xl -z-10" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent tracking-tight">
                 DemandeX
               </h1>
-              <p className="text-xs sm:text-sm mt-1.5 font-medium italic tracking-wide leading-relaxed max-w-md mx-auto px-2 text-center">
-                <span className="drop-shadow-sm font-semibold">
-                  <span className="text-slate-700 dark:!text-white">Gerenciando sua vida com</span>{' '}
-                  <span className="text-primary-600 dark:text-primary-400 font-bold">inteligência</span>
+              <p className="text-xs sm:text-sm mt-0.5 font-medium tracking-wide leading-relaxed max-w-md mx-auto px-2 text-center">
+                <span className="font-semibold">
+                  <span className="text-slate-600">Gerenciando sua vida com</span>{' '}
+                  <span className="text-primary-600 font-bold">inteligência</span>
                 </span>
               </p>
             </div>
@@ -208,8 +247,11 @@ export const Sidebar: React.FC = () => {
 
           {/* Logo quando colapsado */}
           {isCollapsed && (
-            <div className="flex justify-center items-center">
-              <Logo size="lg" showText={false} />
+            <div className="flex justify-center items-center animate-scaleIn">
+              <div className="relative">
+                <Logo size="lg" showText={false} />
+                <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-xl -z-10" />
+              </div>
             </div>
           )}
 
@@ -217,22 +259,24 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => setIsOpen(false)}
             className={cn(
-              'absolute top-4 right-4 z-50 p-2 rounded-lg',
-              'bg-white dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700',
-              'border border-slate-200/60 dark:border-slate-700/60',
-              'shadow-md hover:shadow-lg',
-              'transition-all duration-100 ease-out',
+              'absolute top-4 right-4 z-50 p-2.5 rounded-xl',
+              'bg-white/90 backdrop-blur-sm',
+              'border border-slate-200/60',
+              'shadow-lg hover:shadow-xl hover:scale-105',
+              'transition-all duration-200 ease-out',
               'lg:hidden flex items-center justify-center',
-              'active:scale-95'
+              'active:scale-95',
+              'cursor-pointer',
+              'hover:bg-white'
             )}
             aria-label="Fechar menu"
           >
-            <X size={18} className="text-slate-700 dark:text-slate-200" />
+            <X size={18} className="text-slate-700" />
           </button>
           </div>
 
         {/* Navigation com scroll suave */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-2 min-h-0 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent hover:scrollbar-thumb-slate-400">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-1.5 min-h-0 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent hover:scrollbar-thumb-slate-400">
           {menuItems.map((item, index) => {
               const Icon = item.icon
               const hasSubmenu = item.submenu && item.submenu.length > 0
@@ -249,9 +293,10 @@ export const Sidebar: React.FC = () => {
                 {active && (
                   <div
                     className={cn(
-                      'absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-r-full',
-                      'bg-gradient-to-b from-primary-500 to-primary-600',
-                      'shadow-md shadow-primary-500/30'
+                      'absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-12 rounded-r-full',
+                      'bg-gradient-to-b from-primary-500 via-primary-600 to-primary-700',
+                      'shadow-lg shadow-primary-500/40',
+                      'animate-fadeIn'
                     )}
                   />
                 )}
@@ -264,24 +309,35 @@ export const Sidebar: React.FC = () => {
                       className={cn(
                         'relative flex items-center',
                         'rounded-xl',
-                        isCollapsed ? 'px-0 py-3.5 justify-center' : 'px-5 py-3.5 justify-between',
+                        'transition-all duration-200 ease-out',
+                        isCollapsed ? 'px-0 py-3.5 justify-center' : 'px-4 py-3.5 justify-between',
                         active || hasActiveSubmenu
                           ? cn(
-                              'bg-gradient-to-r text-white shadow-lg',
+                              'bg-gradient-to-r text-white shadow-xl',
                               item.gradient,
-                              'shadow-primary-500/30'
+                              'shadow-primary-500/40',
+                              'scale-[1.02]'
                             )
                           : cn(
-                              'text-slate-700 dark:text-slate-200'
+                              'text-slate-700',
+                              'hover:bg-slate-50',
+                              'hover:shadow-md',
+                              'hover:scale-[1.01]'
                             )
                       )}
                     >
                       {/* Link para navegar para a página principal */}
                   <Link
                     href={item.href}
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => {
+                          setIsOpen(false)
+                          // Abre este submenu e fecha os outros
+                          if (!isExpanded) {
+                            setExpandedMenus([item.title])
+                          }
+                        }}
                         className={cn(
-                          'flex items-center min-w-0 flex-1',
+                          'flex items-center min-w-0 flex-1 cursor-pointer',
                           'text-base font-medium',
                           'focus:outline-none focus:ring-2 focus:ring-primary-500/50 rounded-lg',
                           isCollapsed ? 'justify-center' : 'gap-3'
@@ -291,36 +347,37 @@ export const Sidebar: React.FC = () => {
                         <div className="relative flex-shrink-0">
                           {active || hasActiveSubmenu ? (
                             <div className={cn(
-                              'w-9 h-9 rounded-xl bg-gradient-to-br shadow-md flex items-center justify-center',
+                              'w-10 h-10 rounded-xl bg-gradient-to-br shadow-lg flex items-center justify-center',
                               item.gradient,
-                              'ring-1 ring-white/50'
+                              'ring-2 ring-white/30',
+                              'animate-scaleIn'
                             )}>
-                              <Icon size={20} strokeWidth={2.5} className="text-white" />
+                              <Icon size={21} strokeWidth={2.5} className="text-white drop-shadow-sm" />
                             </div>
                           ) : (
                             <div className={cn(
-                              'w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-150',
-                              'bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800',
-                              'border border-slate-200/60 dark:border-slate-600/60',
+                              'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200',
+                              'bg-gradient-to-br from-slate-50 to-white',
+                              'border border-slate-200/80',
                               'shadow-sm',
-                              'group-hover:shadow-md',
-                              item.gradient === 'from-blue-500 to-cyan-500' && 'group-hover:bg-gradient-to-br group-hover:from-blue-50 dark:group-hover:from-blue-900/30 group-hover:to-cyan-50 dark:group-hover:to-cyan-900/30 group-hover:border-blue-200/60 dark:group-hover:border-blue-500/40',
-                              item.gradient === 'from-pink-500 to-rose-500' && 'group-hover:bg-gradient-to-br group-hover:from-pink-50 dark:group-hover:from-pink-900/30 group-hover:to-rose-50 dark:group-hover:to-rose-900/30 group-hover:border-pink-200/60 dark:group-hover:border-pink-500/40',
-                              item.gradient === 'from-emerald-500 to-teal-500' && 'group-hover:bg-gradient-to-br group-hover:from-emerald-50 dark:group-hover:from-emerald-900/30 group-hover:to-teal-50 dark:group-hover:to-teal-900/30 group-hover:border-emerald-200/60 dark:group-hover:border-emerald-500/40',
-                              item.gradient === 'from-amber-500 to-orange-500' && 'group-hover:bg-gradient-to-br group-hover:from-amber-50 dark:group-hover:from-amber-900/30 group-hover:to-orange-50 dark:group-hover:to-orange-900/30 group-hover:border-amber-200/60 dark:group-hover:border-amber-500/40',
-                              item.gradient === 'from-purple-500 to-violet-500' && 'group-hover:bg-gradient-to-br group-hover:from-purple-50 dark:group-hover:from-purple-900/30 group-hover:to-violet-50 dark:group-hover:to-violet-900/30 group-hover:border-purple-200/60 dark:group-hover:border-purple-500/40'
+                              'group-hover:shadow-md group-hover:scale-105',
+                              item.gradient === 'from-blue-500 to-cyan-500' && 'group-hover:bg-gradient-to-br group-hover:from-blue-50 group-hover:to-cyan-50 group-hover:border-blue-300/60',
+                              item.gradient === 'from-pink-500 to-rose-500' && 'group-hover:bg-gradient-to-br group-hover:from-pink-50 group-hover:to-rose-50 group-hover:border-pink-300/60',
+                              item.gradient === 'from-emerald-500 to-teal-500' && 'group-hover:bg-gradient-to-br group-hover:from-emerald-50 group-hover:to-teal-50 group-hover:border-emerald-300/60',
+                              item.gradient === 'from-amber-500 to-orange-500' && 'group-hover:bg-gradient-to-br group-hover:from-amber-50 group-hover:to-orange-50 group-hover:border-amber-300/60',
+                              item.gradient === 'from-purple-500 to-violet-500' && 'group-hover:bg-gradient-to-br group-hover:from-purple-50 group-hover:to-violet-50 group-hover:border-purple-300/60'
                             )}>
                               <Icon 
-                                size={20} 
+                                size={21} 
                                 strokeWidth={2.5} 
                                 className={cn(
-                                  'transition-colors duration-150',
-                                  item.gradient === 'from-blue-500 to-cyan-500' ? 'text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300' :
-                                  item.gradient === 'from-pink-500 to-rose-500' ? 'text-pink-500 dark:text-pink-400 group-hover:text-pink-600 dark:group-hover:text-pink-300' :
-                                  item.gradient === 'from-emerald-500 to-teal-500' ? 'text-emerald-500 dark:text-emerald-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-300' :
-                                  item.gradient === 'from-amber-500 to-orange-500' ? 'text-amber-500 dark:text-amber-400 group-hover:text-amber-600 dark:group-hover:text-amber-300' :
-                                  item.gradient === 'from-purple-500 to-violet-500' ? 'text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300' :
-                                  'text-slate-500 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                                  'transition-all duration-200',
+                                  item.gradient === 'from-blue-500 to-cyan-500' ? 'text-blue-500 group-hover:text-blue-600' :
+                                  item.gradient === 'from-pink-500 to-rose-500' ? 'text-pink-500 group-hover:text-pink-600' :
+                                  item.gradient === 'from-emerald-500 to-teal-500' ? 'text-emerald-500 group-hover:text-emerald-600' :
+                                  item.gradient === 'from-amber-500 to-orange-500' ? 'text-amber-500 group-hover:text-amber-600' :
+                                  item.gradient === 'from-purple-500 to-violet-500' ? 'text-purple-500 group-hover:text-purple-600' :
+                                  'text-slate-500 group-hover:text-slate-600'
                                 )}
                               />
                             </div>
@@ -329,8 +386,8 @@ export const Sidebar: React.FC = () => {
                           
                           {/* Texto - escondido quando colapsado */}
                           <span className={cn(
-                            'truncate relative z-10 text-[15px] overflow-hidden',
-                            active || hasActiveSubmenu ? 'text-white' : 'text-slate-700 dark:text-slate-200',
+                            'truncate relative z-10 text-[15px] font-semibold overflow-hidden',
+                            active || hasActiveSubmenu ? 'text-white drop-shadow-sm' : 'text-slate-700',
                             isCollapsed ? 'lg:w-0 lg:opacity-0 lg:ml-0' : 'w-auto opacity-100 ml-0'
                           )}>
                             {item.title}
@@ -342,22 +399,30 @@ export const Sidebar: React.FC = () => {
                           <button
                             type="button"
                             onClick={(e) => {
+                              e.preventDefault()
                               e.stopPropagation()
-                        toggleMenu(item.title)
-                    }}
-                    className={cn(
-                              'p-1 rounded-lg',
-                              'hover:bg-white/10',
-                              'transition-all duration-100',
-                              'flex-shrink-0'
+                              // Toggle do submenu - fecha todos os outros e abre/fecha este
+                              if (isExpanded) {
+                                setExpandedMenus([])
+                              } else {
+                                setExpandedMenus([item.title])
+                              }
+                            }}
+                            className={cn(
+                              'p-1.5 rounded-lg cursor-pointer',
+                              'hover:bg-white/20',
+                              'transition-all duration-200',
+                              'flex-shrink-0',
+                              'active:scale-95',
+                              'hover:scale-110'
                             )}
                           >
                             <ChevronDown
-                              size={16}
+                              size={18}
                               className={cn(
-                                'text-slate-600 dark:text-slate-300',
-                                (active || hasActiveSubmenu) && 'text-white',
-                                'transition-transform duration-100',
+                                'text-slate-600',
+                                (active || hasActiveSubmenu) && 'text-white drop-shadow-sm',
+                                'transition-all duration-200',
                                 isExpanded ? 'rotate-180' : 'rotate-0'
                               )}
                             />
@@ -369,23 +434,30 @@ export const Sidebar: React.FC = () => {
                     // Link para itens sem submenu (navega diretamente)
                     <Link
                       href={item.href}
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        setIsOpen(false)
+                        // Navegação imediata
+                      }}
                       className={cn(
                         'group relative flex items-center',
                         'rounded-xl',
-                        'text-base font-medium',
+                        'text-base font-semibold',
                         'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2',
-                        isCollapsed ? 'px-0 py-3.5 justify-center' : 'px-5 py-3.5 justify-start',
+                        'transition-all duration-200',
+                        'cursor-pointer',
+                        isCollapsed ? 'px-0 py-3.5 justify-center' : 'px-4 py-3.5 justify-start',
                       active
                           ? cn(
-                              'bg-gradient-to-r text-white shadow-lg',
+                              'bg-gradient-to-r text-white shadow-xl',
                               item.gradient,
-                              'shadow-primary-500/30'
+                              'shadow-primary-500/40',
+                              'scale-[1.02]'
                             )
                           : cn(
-                              'text-slate-700 dark:text-slate-200',
-                              'hover:bg-slate-50 dark:hover:bg-slate-800',
-                              'hover:shadow-sm'
+                              'text-slate-700',
+                              'hover:bg-slate-50',
+                              'hover:shadow-md',
+                              'hover:scale-[1.01]'
                             )
                       )}
                       title={isCollapsed ? item.title : undefined}
@@ -398,36 +470,37 @@ export const Sidebar: React.FC = () => {
                         <div className="relative flex-shrink-0">
                           {active ? (
                             <div className={cn(
-                              'w-9 h-9 rounded-xl bg-gradient-to-br shadow-md flex items-center justify-center',
+                              'w-10 h-10 rounded-xl bg-gradient-to-br shadow-lg flex items-center justify-center',
                               item.gradient,
-                              'ring-1 ring-white/50'
+                              'ring-2 ring-white/30',
+                              'animate-scaleIn'
                             )}>
-                              <Icon size={20} strokeWidth={2.5} className="text-white" />
+                              <Icon size={21} strokeWidth={2.5} className="text-white drop-shadow-sm" />
                             </div>
                           ) : (
                             <div className={cn(
-                              'w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-150',
-                              'bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800',
-                              'border border-slate-200/60 dark:border-slate-600/60',
+                              'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200',
+                              'bg-gradient-to-br from-slate-50 to-white',
+                              'border border-slate-200/80',
                               'shadow-sm',
-                              'group-hover:shadow-md',
-                              item.gradient === 'from-blue-500 to-cyan-500' && 'group-hover:bg-gradient-to-br group-hover:from-blue-50 dark:group-hover:from-blue-900/30 group-hover:to-cyan-50 dark:group-hover:to-cyan-900/30 group-hover:border-blue-200/60 dark:group-hover:border-blue-500/40',
-                              item.gradient === 'from-pink-500 to-rose-500' && 'group-hover:bg-gradient-to-br group-hover:from-pink-50 dark:group-hover:from-pink-900/30 group-hover:to-rose-50 dark:group-hover:to-rose-900/30 group-hover:border-pink-200/60 dark:group-hover:border-pink-500/40',
-                              item.gradient === 'from-emerald-500 to-teal-500' && 'group-hover:bg-gradient-to-br group-hover:from-emerald-50 dark:group-hover:from-emerald-900/30 group-hover:to-teal-50 dark:group-hover:to-teal-900/30 group-hover:border-emerald-200/60 dark:group-hover:border-emerald-500/40',
-                              item.gradient === 'from-amber-500 to-orange-500' && 'group-hover:bg-gradient-to-br group-hover:from-amber-50 dark:group-hover:from-amber-900/30 group-hover:to-orange-50 dark:group-hover:to-orange-900/30 group-hover:border-amber-200/60 dark:group-hover:border-amber-500/40',
-                              item.gradient === 'from-purple-500 to-violet-500' && 'group-hover:bg-gradient-to-br group-hover:from-purple-50 dark:group-hover:from-purple-900/30 group-hover:to-violet-50 dark:group-hover:to-violet-900/30 group-hover:border-purple-200/60 dark:group-hover:border-purple-500/40'
+                              'group-hover:shadow-md group-hover:scale-105',
+                              item.gradient === 'from-blue-500 to-cyan-500' && 'group-hover:bg-gradient-to-br group-hover:from-blue-50 group-hover:to-cyan-50 group-hover:border-blue-300/60',
+                              item.gradient === 'from-pink-500 to-rose-500' && 'group-hover:bg-gradient-to-br group-hover:from-pink-50 group-hover:to-rose-50 group-hover:border-pink-300/60',
+                              item.gradient === 'from-emerald-500 to-teal-500' && 'group-hover:bg-gradient-to-br group-hover:from-emerald-50 group-hover:to-teal-50 group-hover:border-emerald-300/60',
+                              item.gradient === 'from-amber-500 to-orange-500' && 'group-hover:bg-gradient-to-br group-hover:from-amber-50 group-hover:to-orange-50 group-hover:border-amber-300/60',
+                              item.gradient === 'from-purple-500 to-violet-500' && 'group-hover:bg-gradient-to-br group-hover:from-purple-50 group-hover:to-violet-50 group-hover:border-purple-300/60'
                             )}>
                               <Icon 
-                                size={20} 
+                                size={21} 
                                 strokeWidth={2.5} 
                                 className={cn(
-                                  'transition-colors duration-150',
-                                  item.gradient === 'from-blue-500 to-cyan-500' ? 'text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300' :
-                                  item.gradient === 'from-pink-500 to-rose-500' ? 'text-pink-500 dark:text-pink-400 group-hover:text-pink-600 dark:group-hover:text-pink-300' :
-                                  item.gradient === 'from-emerald-500 to-teal-500' ? 'text-emerald-500 dark:text-emerald-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-300' :
-                                  item.gradient === 'from-amber-500 to-orange-500' ? 'text-amber-500 dark:text-amber-400 group-hover:text-amber-600 dark:group-hover:text-amber-300' :
-                                  item.gradient === 'from-purple-500 to-violet-500' ? 'text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300' :
-                                  'text-slate-500 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                                  'transition-all duration-200',
+                                  item.gradient === 'from-blue-500 to-cyan-500' ? 'text-blue-500 group-hover:text-blue-600' :
+                                  item.gradient === 'from-pink-500 to-rose-500' ? 'text-pink-500 group-hover:text-pink-600' :
+                                  item.gradient === 'from-emerald-500 to-teal-500' ? 'text-emerald-500 group-hover:text-emerald-600' :
+                                  item.gradient === 'from-amber-500 to-orange-500' ? 'text-amber-500 group-hover:text-amber-600' :
+                                  item.gradient === 'from-purple-500 to-violet-500' ? 'text-purple-500 group-hover:text-purple-600' :
+                                  'text-slate-500 group-hover:text-slate-600'
                                 )}
                               />
                             </div>
@@ -436,8 +509,8 @@ export const Sidebar: React.FC = () => {
                         
                         {/* Texto - escondido quando colapsado */}
                         <span className={cn(
-                          'truncate relative z-10 text-[15px] overflow-hidden',
-                          active ? 'text-white' : 'text-slate-700 dark:text-slate-200',
+                          'truncate relative z-10 text-[15px] font-semibold overflow-hidden',
+                          active ? 'text-white drop-shadow-sm' : 'text-slate-700',
                           isCollapsed ? 'lg:w-0 lg:opacity-0 lg:ml-0' : 'w-auto opacity-100 ml-0'
                         )}>
                           {item.title}
@@ -450,13 +523,13 @@ export const Sidebar: React.FC = () => {
                 {hasSubmenu && !isCollapsed && (
                   <div
                     className={cn(
-                      'overflow-hidden transition-all duration-100 ease-in-out',
+                      'overflow-hidden transition-all duration-300 ease-out',
                       isExpanded 
                         ? 'max-h-96 opacity-100 mt-2' 
                         : 'max-h-0 opacity-0 mt-0'
                     )}
                   >
-                    <div className="ml-4 pl-4 border-l-2 border-slate-200/50 space-y-1">
+                    <div className="ml-5 pl-5 border-l-2 border-slate-200/40 space-y-1.5">
                       {item.submenu.map((subitem, subIndex) => {
                         const SubIcon = subitem.icon
                         const subActive = isActive(subitem.href)
@@ -465,50 +538,60 @@ export const Sidebar: React.FC = () => {
                           <Link
                             key={subitem.title}
                             href={subitem.href}
-                              onClick={() => setIsOpen(false)}
+                              onClick={() => {
+                                setIsOpen(false)
+                                // Navegação imediata
+                              }}
                             className={cn(
                                 'group/sub relative flex items-center gap-3',
-                                'px-5 py-3 rounded-lg',
+                                'px-4 py-2.5 rounded-lg',
                                 'text-sm font-medium',
                                 'focus:outline-none focus:ring-2 focus:ring-primary-500/50',
+                                'transition-all duration-200',
+                                'cursor-pointer',
                               subActive
                                   ? cn(
-                                      'bg-gradient-to-r text-white shadow-md',
+                                      'bg-gradient-to-r text-white shadow-lg',
                                       item.gradient,
-                                      'shadow-primary-500/20'
+                                      'shadow-primary-500/30',
+                                      'scale-[1.02]'
                                     )
                                   : cn(
-                                      'text-slate-600 dark:text-slate-300',
-                                      'hover:bg-slate-100 dark:hover:bg-slate-800',
-                                      'hover:shadow-sm'
+                                      'text-slate-600',
+                                      'hover:bg-slate-100',
+                                      'hover:shadow-sm',
+                                      'hover:scale-[1.01]'
                                     )
                               )}
                             >
                               {/* Indicador de ativo para submenu */}
                               {subActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full opacity-80" />
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-white rounded-r-full opacity-90 shadow-sm" />
                               )}
                               
                               <div className="relative flex-shrink-0">
                                 {subActive ? (
-                                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shadow-sm">
+                                  <div className="w-8 h-8 rounded-lg bg-white/25 flex items-center justify-center shadow-md ring-1 ring-white/30">
                                     <SubIcon
-                                      size={16}
+                                      size={17}
                                       strokeWidth={2.5}
-                                      className="text-white"
+                                      className="text-white drop-shadow-sm"
                                     />
                                   </div>
                                 ) : (
-                                  <div className="w-8 h-8 rounded-lg bg-slate-100/50 dark:bg-slate-700/50 flex items-center justify-center group-hover/sub:bg-white/80 dark:group-hover/sub:bg-slate-700/80 group-hover/sub:shadow-sm">
+                                  <div className="w-8 h-8 rounded-lg bg-slate-100/60 flex items-center justify-center group-hover/sub:bg-white group-hover/sub:shadow-sm transition-all duration-200">
                                     <SubIcon
-                                      size={16}
+                                      size={17}
                                       strokeWidth={2.5}
-                                      className="text-slate-500 dark:text-slate-300 group-hover/sub:text-primary-600 dark:group-hover/sub:text-primary-400"
+                                      className="text-slate-500 group-hover/sub:text-primary-600 transition-colors duration-200"
                                     />
                                   </div>
                                 )}
                               </div>
-                              <span className="truncate relative z-10 text-[14px] text-slate-600 dark:text-slate-300">{subitem.title}</span>
+                              <span className={cn(
+                                "truncate relative z-10 text-[14px] font-medium",
+                                subActive ? "text-white drop-shadow-sm" : "text-slate-600"
+                              )}>{subitem.title}</span>
                           </Link>
                         )
                       })}
@@ -521,102 +604,57 @@ export const Sidebar: React.FC = () => {
 
             {/* Notificações */}
           {!isCollapsed && (
-            <div className="pt-2">
+            <div className="pt-3 mt-2 border-t border-slate-200/40">
             <Link
               href="/notificacoes"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false)
+                // Navegação imediata
+              }}
               className={cn(
                   'group relative flex items-center gap-3',
-                  'px-5 py-3.5 rounded-xl',
-                  'text-base font-medium',
+                  'px-4 py-3.5 rounded-xl',
+                  'text-base font-semibold',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500/50',
+                  'transition-all duration-200',
+                  'cursor-pointer',
                 isActive('/notificacoes')
-                    ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-lg'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-sm'
+                    ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-xl scale-[1.02]'
+                    : 'text-slate-700 hover:bg-slate-50 hover:shadow-md hover:scale-[1.01]'
                 )}
               >
                 <div className="relative">
-                  <Bell
-                    size={20}
-                    strokeWidth={2.5}
-                    className={cn(
-                      isActive('/notificacoes')
-                        ? 'text-white'
-                        : 'text-yellow-500'
-                    )}
-                  />
+                  {isActive('/notificacoes') ? (
+                    <div className="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center shadow-md ring-1 ring-white/30">
+                      <Bell
+                        size={21}
+                        strokeWidth={2.5}
+                        className="text-white drop-shadow-sm"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/80 shadow-sm flex items-center justify-center group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+                      <Bell
+                        size={21}
+                        strokeWidth={2.5}
+                        className="text-yellow-500 group-hover:text-yellow-600 transition-colors duration-200"
+                      />
+                    </div>
+                  )}
               {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-danger-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg ring-2 ring-white animate-pulse">
                       {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
                 </div>
-                <span className="truncate">Notificações</span>
+                <span className={cn(
+                  "truncate",
+                  isActive('/notificacoes') ? "text-white drop-shadow-sm" : "text-slate-700"
+                )}>Notificações</span>
             </Link>
         </div>
           )}
 
-          {/* Toggle de tema */}
-          <div className={cn(
-            'pt-4 border-t border-slate-200/60',
-            isCollapsed && 'lg:px-0'
-          )}>
-            {!isCollapsed ? (
-              <div className="flex items-center justify-between gap-3 px-5 py-3 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    'bg-gradient-to-br from-primary-500 to-primary-600',
-                    'shadow-md'
-                  )}>
-                    {theme === 'dark' ? (
-                      <Sun size={16} className="text-white" />
-                    ) : (
-                      <Moon size={16} className="text-white" />
-                    )}
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-                  </span>
-                </div>
-                <button
-                  onClick={toggleTheme}
-                  className={cn(
-                    'relative w-12 h-6 rounded-full transition-colors duration-100',
-                    theme === 'dark' ? 'bg-primary-600' : 'bg-slate-300'
-                  )}
-                  aria-label="Toggle theme"
-                >
-                  <span
-                    className={cn(
-                      'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-100',
-                      theme === 'dark' ? 'translate-x-6' : 'translate-x-0'
-                    )}
-                  />
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <button
-                  onClick={toggleTheme}
-                  className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    'bg-gradient-to-br from-primary-500 to-primary-600',
-                    'shadow-md hover:shadow-lg',
-                    'transition-all duration-100',
-                    'active:scale-95'
-                  )}
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? (
-                    <Sun size={16} className="text-white" />
-                  ) : (
-                    <Moon size={16} className="text-white" />
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
         </nav>
       </aside>
     </>

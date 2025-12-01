@@ -128,3 +128,4 @@ createNotification('diet', 'Hora de almoçar!', '/saude/alimentacao')
 - [ ] Modo escuro
 - [ ] Aplicativo mobile (PWA)
 
+

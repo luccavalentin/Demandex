@@ -11,3 +11,4 @@ git commit -m "feat: Melhorias no sidebar - menu colapsável, cores dos ícones,
 
 Ou execute o arquivo `init-git.bat` que foi criado na raiz do projeto.
 
+

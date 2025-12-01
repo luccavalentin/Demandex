@@ -10,16 +10,11 @@
   }
   
   body {
-    @apply text-slate-900 dark:text-white antialiased;
+    @apply text-slate-900 antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #e0f2fe 50%, #f3e8ff 75%, #f8fafc 100%);
-    background-attachment: fixed;
-  }
-  
-  .dark body {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #1e3a8a 50%, #312e81 75%, #0f172a 100%);
     background-attachment: fixed;
   }
   
@@ -30,22 +25,7 @@
   
   /* Seleção de texto personalizada */
   ::selection {
-    @apply bg-primary-200 dark:bg-primary-800 text-primary-900 dark:text-primary-100;
-  }
-  
-  /* Scrollbar dark mode */
-  .dark ::-webkit-scrollbar-track {
-    @apply bg-slate-800/50;
-  }
-  
-  .dark ::-webkit-scrollbar-thumb {
-    @apply bg-slate-600;
-    background: linear-gradient(180deg, #475569 0%, #334155 100%);
-  }
-  
-  .dark ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-500;
-    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+    @apply bg-primary-200 text-primary-900;
   }
 }
 
@@ -55,17 +35,11 @@
     box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04), 
                 0 8px 16px -4px rgba(0, 0, 0, 0.02),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-  }
-  
-  .dark .card {
-    @apply bg-white border-slate-200/80;
-    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 
-                0 8px 16px -4px rgba(0, 0, 0, 0.05);
-    background-color: rgb(255 255 255) !important; /* Sempre branco no modo escuro */
+    will-change: transform;
   }
   
   .card-hover {
-    @apply transition-all duration-150 ease-out;
+    @apply transition-transform duration-100 ease-out;
   }
   
   .card-hover:hover {
@@ -84,7 +58,7 @@
   .btn-primary {
     @apply bg-primary-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 
            rounded-md font-medium
-           transition-all duration-200 ease-out
+           transition-colors duration-100 ease-out
            hover:bg-primary-700 
            active:bg-primary-600
            disabled:opacity-40 disabled:cursor-not-allowed
@@ -94,7 +68,7 @@
   .btn-secondary {
     @apply bg-white text-primary-600 px-5 py-2.5 sm:px-6 sm:py-3 rounded-md font-medium 
            border border-primary-200
-           transition-all duration-200 ease-out
+           transition-colors duration-100 ease-out
            hover:bg-primary-50 hover:border-primary-300
            active:bg-white touch-manipulation;
   }
@@ -190,13 +164,17 @@
   perspective: 1000px;
   position: relative;
   width: 100%;
+  min-height: 400px;
 }
 
 .card-flip {
   position: relative;
   width: 100%;
-  transition: transform 0.6s;
+  min-height: 400px;
+  transition: transform 0.3s ease-out;
   transform-style: preserve-3d;
+  will-change: transform;
+  cursor: pointer;
 }
 
 .card-flip.flipped {
@@ -204,10 +182,21 @@
 }
 
 .card-front {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  min-height: 400px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.card-front > * {
+  pointer-events: auto;
+  width: 100%;
 }
 
 .card-back {
@@ -215,24 +204,62 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  min-height: 400px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.card-back > * {
+  pointer-events: auto;
+  width: 100%;
+}
+
+/* Quando o card está virado, ajustar altura dinamicamente mas manter posição */
+.card-flip-container.flipped {
+  z-index: 1;
+  position: relative;
+}
+
+/* Garantir que cards de ações rápidas fiquem abaixo */
+.quick-actions-container {
+  position: relative;
+  z-index: 2;
+  clear: both;
+  margin-top: 2rem;
+}
+
+.card-flip-container.flipped .card-flip {
+  min-height: auto;
+}
+
+.card-flip-container.flipped .card-front {
+  min-height: auto;
+  height: auto;
+}
+
+.card-flip-container.flipped .card-back {
+  min-height: auto;
+  height: auto;
+  overflow: visible;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.2s ease-out forwards;
   opacity: 0;
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.5s ease-out forwards;
+  animation: scaleIn 0.2s ease-out forwards;
   opacity: 0;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.5s ease-out forwards;
+  animation: slideUp 0.2s ease-out forwards;
   opacity: 0;
 }
 
@@ -279,6 +306,16 @@
   @apply bg-slate-400/80;
 }
 
+/* Esconder scrollbar horizontal */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Animação de entrada para itens do menu */
 @keyframes slideInFromLeft {
   0% {
@@ -311,4 +348,3 @@
   background-size: 1000px 100%;
   animation: shimmer 3s infinite;
 }
-

@@ -5,3 +5,4 @@ git add components/ app/globals.css .gitignore package.json tsconfig.json next.c
 git commit -m "feat: Melhorias no sidebar - menu colapsável, cores dos ícones, layout responsivo e mobile otimizado"
 echo Git inicializado e commit realizado!
 
+

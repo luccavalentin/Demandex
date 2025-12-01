@@ -7,7 +7,7 @@ import { Button } from '@/components/UI/Button'
 import { Input } from '@/components/UI/Input'
 import { useStore } from '@/lib/store'
 import type { AttractionGoal } from '@/types'
-import { Plus, Trash2, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, Sparkles, CheckCircle2, X } from 'lucide-react'
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
 
@@ -67,9 +67,23 @@ export default function LeiAtracaoPage() {
 
         {/* Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md p-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4">
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                resetForm()
+              }
+            }}
+          >
+            <Card className="w-full max-w-md p-6 relative">
+              <button
+                onClick={resetForm}
+                className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors z-10"
+                aria-label="Fechar"
+              >
+                <X size={20} className="text-slate-600 dark:text-slate-300" />
+              </button>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4 pr-8">
                 Novo Objetivo
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">

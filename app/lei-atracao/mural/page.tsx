@@ -8,7 +8,7 @@ import { Button } from '@/components/UI/Button'
 import { Input } from '@/components/UI/Input'
 import { useStore } from '@/lib/store'
 import type { AttractionGoal } from '@/types'
-import { Plus, Trash2, Sparkles, Image as ImageIcon, Link as LinkIcon, Lightbulb } from 'lucide-react'
+import { Plus, Trash2, Sparkles, Image as ImageIcon, Link as LinkIcon, Lightbulb, X } from 'lucide-react'
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
 
@@ -200,9 +200,27 @@ export default function MuralPage() {
 
         {/* Modal for Notes */}
         {isModalOpen && selectedGoal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md p-6">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4">
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsModalOpen(false)
+                setSelectedGoal(null)
+              }
+            }}
+          >
+            <Card className="w-full max-w-md p-6 relative">
+              <button
+                onClick={() => {
+                  setIsModalOpen(false)
+                  setSelectedGoal(null)
+                }}
+                className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors z-10"
+                aria-label="Fechar"
+              >
+                <X size={20} className="text-slate-600 dark:text-slate-300" />
+              </button>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4 pr-8">
                 Observações - {selectedGoal.title}
               </h2>
               <div>

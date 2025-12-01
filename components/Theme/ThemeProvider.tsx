@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark'
+type Theme = 'light'
 
 interface ThemeContextType {
   theme: Theme
@@ -25,36 +25,24 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('light')
+  const [theme] = useState<Theme>('light')
 
   useEffect(() => {
-    // Verifica se há tema salvo no localStorage ou usa a preferência do sistema
-    const savedTheme = localStorage.getItem('theme') as Theme | null
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    const initialTheme = savedTheme || systemTheme
-    
-    setThemeState(initialTheme)
-    applyTheme(initialTheme)
+    // Sempre força light mode
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement
+      root.classList.remove('dark')
+      root.classList.add('light')
+      localStorage.setItem('theme', 'light')
+    }
   }, [])
 
-  const applyTheme = (newTheme: Theme) => {
-    if (typeof window === 'undefined') return
-    const root = document.documentElement
-    root.classList.remove('light', 'dark')
-    root.classList.add(newTheme)
-  }
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', newTheme)
-      applyTheme(newTheme)
-    }
+  const setTheme = () => {
+    // Não faz nada, sempre light
   }
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light'
-    setTheme(newTheme)
+    // Não faz nada, sempre light
   }
 
   return (

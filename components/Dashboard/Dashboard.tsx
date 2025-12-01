@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { MainLayout } from '@/components/Layout/MainLayout'
 import { Card } from '@/components/UI/Card'
 import { Logo } from '@/components/UI/Logo'
@@ -12,20 +12,28 @@ import {
   Target,
   TrendingUp,
   TrendingDown,
-  ArrowRight,
-  Sparkles,
-  X,
   UtensilsCrossed,
   Dumbbell,
   Moon,
+  Zap,
+  BookOpen,
+  FolderKanban,
+  Calendar,
+  Clock,
+  AlertCircle,
+  BarChart3,
+  Activity,
+  Award,
+  ArrowRight,
+  Plus,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, isToday, isPast, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 
 export default function Dashboard() {
-  const [flippedCard, setFlippedCard] = useState<string | null>(null)
+  const [isClient, setIsClient] = useState(false)
   const {
     meals,
     workouts,
@@ -33,713 +41,681 @@ export default function Dashboard() {
     healthGoals,
     transactions,
     financialGoals,
+    investments,
     tasks,
     studyAreas,
     personalProjects,
     productivityGoals,
   } = useStore()
 
-  // Cálculos
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const today = new Date()
-  const todayMeals = meals.filter(
-    (m) => format(new Date(m.date), 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
-  ).length
-  const todayWorkouts = workouts.filter(
-    (w) => format(new Date(w.date), 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
-  ).length
-  const todayTasks = tasks.filter((t) => t.status !== 'done').length
-  const overdueTasks = tasks.filter(
-    (t) => t.dueDate && new Date(t.dueDate) < today && t.status !== 'done'
-  ).length
+  const startOfThisWeek = startOfWeek(today, { locale: ptBR })
+  const endOfThisWeek = endOfWeek(today, { locale: ptBR })
+  const startOfThisMonth = startOfMonth(today)
+  const endOfThisMonth = endOfMonth(today)
 
-  const totalIncome = transactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
-  const totalExpenses = transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
-  const balance = totalIncome - totalExpenses
+  // Estatísticas de Saúde
+  const healthStats = useMemo(() => {
+    const todayMeals = meals.filter(m => isToday(new Date(m.date))).length
+    const weekMeals = meals.filter(m => {
+      const mealDate = new Date(m.date)
+      return mealDate >= startOfThisWeek && mealDate <= endOfThisWeek
+    }).length
+    const todayWorkouts = workouts.filter(w => isToday(new Date(w.date))).length
+    const weekWorkouts = workouts.filter(w => {
+      const workoutDate = new Date(w.date)
+      return workoutDate >= startOfThisWeek && workoutDate <= endOfThisWeek
+    }).length
+    const todaySleep = sleeps.find(s => isToday(new Date(s.date)))
+    const avgSleepQuality = sleeps.length > 0
+      ? sleeps.reduce((sum, s) => sum + s.quality, 0) / sleeps.length
+      : 0
+    const completedHealthGoals = healthGoals.filter(g => g.completed).length
+    const healthProgress = healthGoals.length > 0
+      ? Math.round((completedHealthGoals / healthGoals.length) * 100)
+      : 0
 
-  const completedHealthGoals = healthGoals.filter((g) => g.completed).length
-  const completedFinancialGoals = financialGoals.filter((g) => g.completed).length
-  const completedProductivityGoals = productivityGoals.filter((g) => g.completed).length
+    return {
+      todayMeals,
+      weekMeals,
+      todayWorkouts,
+      weekWorkouts,
+      todaySleep,
+      avgSleepQuality: Math.round(avgSleepQuality),
+      completedHealthGoals,
+      totalHealthGoals: healthGoals.length,
+      healthProgress,
+    }
+  }, [meals, workouts, sleeps, healthGoals])
 
-  const totalPomodoros = studyAreas.reduce(
-    (sum, area) =>
-      sum +
-      area.subjects.reduce(
-        (s, subject) =>
-          s +
-          subject.classes.reduce(
-            (c, classItem) => c + classItem.pomodoros.length,
-            0
-          ),
-        0
-      ),
-    0
-  )
+  // Estatísticas Financeiras
+  const financialStats = useMemo(() => {
+    const totalIncome = transactions.filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0)
+    const totalExpenses = transactions.filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0)
+    const balance = totalIncome - totalExpenses
 
-  // Cálculos de progresso
-  const healthProgress = healthGoals.length > 0 
-    ? Math.round((completedHealthGoals / healthGoals.length) * 100) 
-    : 0
-  const financialProgress = financialGoals.length > 0 
-    ? Math.round((completedFinancialGoals / financialGoals.length) * 100) 
-    : 0
-  const productivityProgress = productivityGoals.length > 0 
-    ? Math.round((completedProductivityGoals / productivityGoals.length) * 100) 
-    : 0
-  const stats = [
-    {
-      title: 'Saúde',
-      icon: Heart,
-      color: 'from-success-500 to-success-600',
-      bgColor: 'bg-success-50',
-      borderColor: 'border-success-200',
-      progress: healthProgress,
-      progressColor: 'bg-success-500',
-      items: [
-        { label: 'Refeições hoje', value: todayMeals, target: 3, icon: '🍽️' },
-        { label: 'Treinos hoje', value: todayWorkouts, target: 1, icon: '💪' },
-        { label: 'Objetivos', value: `${completedHealthGoals}/${healthGoals.length || 0}`, progress: healthProgress },
-      ],
-      href: '/saude',
-    },
-    {
-      title: 'Produtividade',
-      icon: CheckSquare,
-      color: 'from-warning-500 to-warning-600',
-      bgColor: 'bg-warning-50',
-      borderColor: 'border-warning-200',
-      progress: productivityProgress,
-      progressColor: 'bg-warning-500',
-      items: [
-        { label: 'Tarefas pendentes', value: todayTasks, icon: '📋' },
-        { label: 'Tarefas atrasadas', value: overdueTasks, warning: overdueTasks > 0, icon: '⚠️' },
-        { label: 'Pomodoros', value: totalPomodoros, icon: '🍅' },
-        { label: 'Objetivos', value: `${completedProductivityGoals}/${productivityGoals.length || 0}`, progress: productivityProgress },
-      ],
-      href: '/produtividade',
-    },
-  ]
+    const monthIncome = transactions
+      .filter(t => {
+        if (t.type !== 'income') return false
+        const tDate = new Date(t.date)
+        return tDate >= startOfThisMonth && tDate <= endOfThisMonth
+      })
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    const monthExpenses = transactions
+      .filter(t => {
+        if (t.type !== 'expense') return false
+        const tDate = new Date(t.date)
+        return tDate >= startOfThisMonth && tDate <= endOfThisMonth
+      })
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    const monthBalance = monthIncome - monthExpenses
+
+    const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0)
+    const totalCurrentValue = investments.reduce(
+      (sum, inv) => sum + (inv.currentValue || inv.amount),
+      0
+    )
+    const investmentReturn = totalCurrentValue - totalInvested
+    const investmentReturnPercent = totalInvested > 0
+      ? ((investmentReturn / totalInvested) * 100)
+      : 0
+
+    const completedFinancialGoals = financialGoals.filter(g => g.completed).length
+    const financialProgress = financialGoals.length > 0
+      ? Math.round((completedFinancialGoals / financialGoals.length) * 100)
+      : 0
+
+    return {
+      totalIncome,
+      totalExpenses,
+      balance,
+      monthIncome,
+      monthExpenses,
+      monthBalance,
+      totalInvested,
+      totalCurrentValue,
+      investmentReturn,
+      investmentReturnPercent: Math.round(investmentReturnPercent * 100) / 100,
+      completedFinancialGoals,
+      totalFinancialGoals: financialGoals.length,
+      financialProgress,
+    }
+  }, [transactions, investments, financialGoals])
+
+  // Estatísticas de Produtividade
+  const productivityStats = useMemo(() => {
+    const pendingTasks = tasks.filter(t => t.status === 'todo' && (!t.dueDate || new Date(t.dueDate) >= today))
+    const inProgressTasks = tasks.filter(t => t.status === 'in-progress')
+    const overdueTasks = tasks.filter(t => t.dueDate && isPast(new Date(t.dueDate)) && t.status !== 'done')
+    const completedTasks = tasks.filter(t => t.status === 'done')
+    const todayTasks = tasks.filter(t => t.dueDate && isToday(new Date(t.dueDate)) && t.status !== 'done')
+
+    const totalPomodoros = studyAreas.reduce(
+      (sum, area) =>
+        sum +
+        area.subjects.reduce(
+          (s, subject) =>
+            s +
+            subject.classes.reduce((c, classItem) => c + classItem.pomodoros.length, 0),
+          0
+        ),
+      0
+    )
+
+    const totalStudyMinutes = studyAreas.reduce(
+      (sum, area) =>
+        sum +
+        area.subjects.reduce(
+          (s, subject) =>
+            s +
+            subject.classes.reduce(
+              (c, classItem) =>
+                c +
+                classItem.pomodoros.reduce((p, pom) => p + pom.duration, 0),
+              0
+            ),
+          0
+        ),
+      0
+    )
+
+    const activeProjects = personalProjects.filter(p => p.status === 'in-progress').length
+    const completedProjects = personalProjects.filter(p => p.status === 'completed').length
+
+    const completedProductivityGoals = productivityGoals.filter(g => g.completed).length
+    const productivityProgress = productivityGoals.length > 0
+      ? Math.round((completedProductivityGoals / productivityGoals.length) * 100) 
+      : 0
+
+    return {
+      pendingTasks: pendingTasks.length,
+      inProgressTasks: inProgressTasks.length,
+      overdueTasks: overdueTasks.length,
+      completedTasks: completedTasks.length,
+      todayTasks: todayTasks.length,
+      totalTasks: tasks.length,
+      totalPomodoros,
+      totalStudyMinutes,
+      activeProjects,
+      completedProjects,
+      totalProjects: personalProjects.length,
+      completedProductivityGoals,
+      totalProductivityGoals: productivityGoals.length,
+      productivityProgress,
+    }
+  }, [tasks, studyAreas, personalProjects, productivityGoals])
+
+  // Tarefas recentes e urgentes
+  const recentTasks = useMemo(() => {
+    return tasks
+      .filter(t => t.status !== 'done')
+      .sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        }
+        if (a.dueDate) return -1
+        if (b.dueDate) return 1
+        return 0
+      })
+      .slice(0, 5)
+  }, [tasks])
+
+  // Transações recentes
+  const recentTransactions = useMemo(() => {
+    return transactions
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5)
+  }, [transactions])
 
   return (
     <MainLayout>
-      <div className="space-y-6 sm:space-y-8 animate-fade-in">
+      <div className="space-y-3 sm:space-y-4 md:space-y-6 animate-fade-in">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className="animate-scale-in flex flex-col items-center gap-3" style={{ animationDelay: '0.1s' }}>
+        <div className="mb-3 sm:mb-4 md:mb-6">
+          <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 text-center">
+            <div className="animate-scale-in flex flex-col items-center gap-2 sm:gap-3" style={{ animationDelay: '0.1s' }}>
               <Logo size="md" showText={false} />
               <div className="flex flex-col items-center">
-                <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent">
-                  DemandeX
-                </h2>
-                <p className="text-sm sm:text-base mt-2 font-medium italic tracking-wide leading-relaxed max-w-md mx-auto px-4 relative">
-                  <span className="drop-shadow-sm font-semibold">
-                    <span className="text-slate-700 dark:!text-white">Gerenciando sua vida com</span>{' '}
-                    <span className="text-primary-600 dark:text-primary-400 font-bold">inteligência</span>
-                  </span>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent">
+                  Dashboard
+                </h1>
+                <p className="text-xs sm:text-sm md:text-base mt-1 sm:mt-2 font-medium text-slate-600">
+                  Visão geral da sua vida organizada
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Cards - Resumo Financeiro e Tarefas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-          {/* Resumo Financeiro */}
-          <div 
-            className="card-flip-container animate-fade-in" 
-            style={{ animationDelay: '0.1s' }}
-            onClick={() => setFlippedCard(flippedCard === 'financeiro' ? null : 'financeiro')}
-          >
-            <div className={cn('card-flip', flippedCard === 'financeiro' && 'flipped')}>
-              {/* Frente */}
-              <div className="card-front">
-                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 dark:from-primary-900/20 via-transparent to-transparent pointer-events-none" />
-                  
-                  <div className="flex items-center gap-3 mb-6 relative">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg ring-2 ring-primary-200/50">
-                      <DollarSign className="text-white" size={20} strokeWidth={2.5} />
+        {/* Cards de Estatísticas Principais */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+          {/* Saúde */}
+          <Card className={cn(
+            "p-3 sm:p-4 md:p-5 border shadow-lg overflow-hidden",
+            "bg-gradient-to-br from-success-50 to-success-100/80 border-success-200/70"
+          )}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center shadow-md ring-2 ring-success-200/50 flex-shrink-0">
+                <Heart className="text-white" size={16} strokeWidth={2.5} />
                     </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                      Resumo Financeiro
-                    </h2>
-                  </div>
-              
-              {/* Indicador de saldo geral */}
-              <div className={cn(
-                'mb-4 p-3 rounded-xl border transition-all duration-300 relative z-10',
-                balance >= 0
-                  ? 'bg-gradient-to-br from-success-50/90 to-success-100/60 border-success-300/50 shadow-lg shadow-success-200/30'
-                  : 'bg-gradient-to-br from-danger-50/90 to-danger-100/60 border-danger-300/50 shadow-lg shadow-danger-200/30'
-              )}>
-                <div className="flex items-center justify-between">
-            <div>
-                    <p className="text-sm font-bold text-slate-900 mb-1">Saldo Total</p>
-                    <p className={cn(
-                      'text-2xl sm:text-3xl font-bold',
-                      balance >= 0 ? 'text-success-700' : 'text-danger-700'
-                    )}>
-                      {balance >= 0 ? '+' : ''}R$ {Math.abs(balance).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className={cn(
-                    'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg',
-                    balance >= 0
-                      ? 'bg-gradient-to-br from-success-500 to-success-600'
-                      : 'bg-gradient-to-br from-danger-500 to-danger-600'
-                  )}>
-                    {balance >= 0 ? (
-                      <TrendingUp className="text-white" size={20} strokeWidth={2.5} />
-                    ) : (
-                      <TrendingDown className="text-white" size={20} strokeWidth={2.5} />
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2 relative z-10">
-                <div className="flex items-center justify-between p-3 bg-gradient-to-br from-success-50/90 to-success-100/80 rounded-lg border border-success-200/70 hover:border-success-300/70 hover:shadow-md transition-all duration-300 group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center shadow-lg ring-1 ring-success-200/50 transition-all duration-300">
-                      <TrendingUp className="text-white" size={18} strokeWidth={2.5} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 mb-1">Total de Receitas</p>
-                      <p className="text-xl sm:text-2xl font-bold text-success-700 break-words">
-                        R$ {totalIncome.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gradient-to-br from-danger-50/90 to-danger-100/80 rounded-lg border border-danger-200/70 hover:border-danger-300/70 hover:shadow-md transition-all duration-300 group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-danger-500 to-danger-600 flex items-center justify-center shadow-lg ring-1 ring-danger-200/50 transition-all duration-300">
-                      <TrendingDown className="text-white" size={18} strokeWidth={2.5} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 mb-1">Total de Despesas</p>
-                      <p className="text-xl sm:text-2xl font-bold text-danger-700 break-words">
-                        R$ {totalExpenses.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-                </Card>
-              </div>
-              
-              {/* Verso - Detalhamento */}
-              <div className="card-back">
-                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 dark:from-primary-900/20 via-transparent to-transparent pointer-events-none" />
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg ring-2 ring-primary-200/50">
-                        <DollarSign className="text-white" size={20} strokeWidth={2.5} />
-                      </div>
-                      <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                        Detalhes Financeiros
-                      </h2>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setFlippedCard(null)
-                      }}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                    >
-                      <X size={20} className="text-slate-600 dark:text-slate-300" />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Total de Transações</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{transactions.length}</p>
-                    </div>
-                    <div className="p-3 bg-success-50 dark:bg-success-900/20 rounded-lg">
-                      <p className="text-sm font-semibold text-success-700 dark:text-success-300 mb-2">Receitas</p>
-                      <p className="text-xl font-bold text-success-700 dark:text-success-400">R$ {totalIncome.toFixed(2)}</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        {transactions.filter(t => t.type === 'income').length} transação(ões)
-                      </p>
-                    </div>
-                    <div className="p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
-                      <p className="text-sm font-semibold text-danger-700 dark:text-danger-300 mb-2">Despesas</p>
-                      <p className="text-xl font-bold text-danger-700 dark:text-danger-400">R$ {totalExpenses.toFixed(2)}</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        {transactions.filter(t => t.type === 'expense').length} transação(ões)
-                      </p>
-                    </div>
-                    <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                      <p className="text-sm font-semibold text-primary-700 dark:text-primary-300 mb-2">Metas Financeiras</p>
-                      <p className="text-xl font-bold text-primary-700 dark:text-primary-400">
-                        {completedFinancialGoals}/{financialGoals.length || 0}
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        {financialProgress}% concluído
-                      </p>
-                    </div>
-                    <Link 
-                      href="/financeiro" 
-                      onClick={(e) => e.stopPropagation()}
-                      className="block mt-4 p-3 bg-primary-600 hover:bg-primary-700 text-white text-center rounded-lg font-semibold transition-colors"
-                    >
-                      Ver página completa →
-                    </Link>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </div>
-
-          {/* Tarefas */}
-          <div 
-            className="card-flip-container animate-fade-in" 
-            style={{ animationDelay: '0.2s' }}
-            onClick={() => setFlippedCard(flippedCard === 'tarefas' ? null : 'tarefas')}
-          >
-            <div className={cn('card-flip', flippedCard === 'tarefas' && 'flipped')}>
-              {/* Frente */}
-              <div className="card-front">
-                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-warning-50/30 dark:from-warning-900/20 via-transparent to-transparent pointer-events-none" />
-                  
-                  <div className="flex items-center gap-2 mb-4 relative">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-md ring-1 ring-warning-200/50">
-                      <CheckSquare className="text-white" size={16} strokeWidth={2.5} />
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                      Tarefas Recentes
-                    </h2>
-                  </div>
-            
-            {/* Estatísticas rápidas */}
-            <div className="grid grid-cols-2 gap-2 mb-4 relative z-10">
-              <div className="bg-gradient-to-br from-primary-50/80 dark:from-primary-900/60 to-primary-100/50 dark:to-primary-800/50 rounded-lg p-2.5 border border-primary-200/50 dark:border-primary-600/60">
-                <p className="text-sm text-slate-900 font-bold mb-1">Pendentes</p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary-700">{todayTasks}</p>
-              </div>
-              <div className="bg-gradient-to-br from-danger-50/80 to-danger-100/50 rounded-lg p-2.5 border border-danger-200/50">
-                <p className="text-sm text-slate-900 font-bold mb-1">Atrasadas</p>
-                <p className="text-2xl sm:text-3xl font-bold text-danger-700">{overdueTasks}</p>
-              </div>
-            </div>
-            <div className="space-y-2.5 relative z-10">
-              {tasks.slice(0, 5).map((task, idx) => {
-                const isOverdue = task.dueDate && new Date(task.dueDate) < today && task.status !== 'done'
-                return (
-                <div
-                  key={task.id}
-                    className={cn(
-                      'flex items-center justify-between gap-2 p-3 rounded-lg border transition-all duration-300 animate-fade-in group/item',
-                      isOverdue 
-                        ? 'bg-gradient-to-r from-danger-50/90 dark:from-danger-900/40 to-danger-100/50 dark:to-danger-800/30 border-danger-200/70 dark:border-danger-700/40 hover:border-danger-300/70 dark:hover:border-danger-600/50 hover:shadow-md' :
-                      task.status === 'done'
-                        ? 'bg-gradient-to-r from-success-50/90 dark:from-success-900/40 to-success-100/50 dark:to-success-800/30 border-success-200/70 dark:border-success-700/40 hover:border-success-300/70 dark:hover:border-success-600/50 hover:shadow-md' :
-                        'bg-gradient-to-r from-white/95 dark:from-slate-500/90 to-slate-50/80 dark:to-slate-500/60 border-slate-200/70 dark:border-slate-500/60 hover:border-primary-200/50 dark:hover:border-primary-500/70 hover:shadow-md'
-                    )}
-                    style={{ 
-                      animationDelay: `${0.3 + idx * 0.1}s`,
-                    }}
-                  >
-                    <div className="flex items-start gap-2 flex-1 min-w-0">
-                      <div className={cn(
-                        'w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0',
-                        isOverdue ? 'bg-danger-500' :
-                        task.status === 'done' ? 'bg-success-500' :
-                        task.status === 'in-progress' ? 'bg-warning-500' :
-                        'bg-primary-500'
-                      )} />
-                  <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          'text-sm sm:text-base font-semibold break-words mb-1',
-                          isOverdue ? 'text-danger-900' :
-                          task.status === 'done' ? 'text-success-900 line-through opacity-70' :
-                          'text-slate-900'
-                        )}>
-                          {task.title}
-                        </p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className={cn(
-                            'text-xs text-slate-600 font-medium',
-                            isOverdue && 'text-danger-700'
-                          )}>
-                      {task.dueDate
-                        ? format(new Date(task.dueDate), "dd 'de' MMM", {
-                            locale: ptBR,
-                          })
-                        : 'Sem data'}
-                    </p>
-                          {isOverdue && (
-                            <span className="text-[10px] font-bold text-danger-700 bg-danger-200 px-2 py-0.5 rounded-full">
-                              ATRASADA
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                  </div>
-                  <span
-                      className={cn(
-                        'badge text-xs font-semibold px-2 py-1 flex-shrink-0 whitespace-nowrap shadow-sm',
-                      task.status === 'done'
-                        ? 'badge-success'
-                        : task.status === 'in-progress'
-                        ? 'badge-warning'
-                        : 'badge-primary'
-                      )}
-                  >
-                    {task.status === 'done'
-                        ? '✓ Concluída'
-                      : task.status === 'in-progress'
-                        ? '⏳ Em andamento'
-                        : '○ Pendente'}
-                  </span>
-                </div>
-                )
-              })}
-              {tasks.length === 0 && (
-                <div className="text-center py-6">
-                  <CheckSquare size={36} className="mx-auto text-slate-300 mb-2" />
-                  <p className="text-sm sm:text-base text-slate-600 font-medium">
-                  Nenhuma tarefa cadastrada ainda
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Saúde</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-success-700 truncate">
+                  {healthStats.healthProgress}%
                 </p>
-                </div>
-              )}
+                  </div>
             </div>
           </Card>
+
+          {/* Financeiro */}
+          <Card className={cn(
+            "p-3 sm:p-4 md:p-5 border shadow-lg overflow-hidden",
+            financialStats.balance >= 0
+              ? 'bg-gradient-to-br from-primary-50 to-primary-100/80 border-primary-200/70'
+              : 'bg-gradient-to-br from-danger-50 to-danger-100/80 border-danger-200/70'
+          )}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={cn(
+                "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center shadow-md ring-2 flex-shrink-0",
+                financialStats.balance >= 0
+                  ? 'bg-gradient-to-br from-primary-500 to-primary-600 ring-primary-200/50'
+                  : 'bg-gradient-to-br from-danger-500 to-danger-600 ring-danger-200/50'
+              )}>
+                <DollarSign className="text-white" size={16} strokeWidth={2.5} />
               </div>
-              
-              {/* Verso - Detalhamento */}
-              <div className="card-back">
-                <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
-                  <div className="absolute inset-0 bg-gradient-to-br from-warning-50/30 dark:from-warning-900/20 via-transparent to-transparent pointer-events-none" />
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-md ring-1 ring-warning-200/50">
-                        <CheckSquare className="text-white" size={16} strokeWidth={2.5} />
-                      </div>
-                      <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                        Detalhes de Tarefas
-                      </h2>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setFlippedCard(null)
-                      }}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                    >
-                      <X size={20} className="text-slate-600 dark:text-slate-300" />
-                    </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Saldo</p>
+                    <p className={cn(
+                  "text-sm sm:text-base md:text-lg lg:text-xl font-bold truncate",
+                  financialStats.balance >= 0
+                    ? 'text-primary-700'
+                    : 'text-danger-700'
+                )}>
+                  {formatCurrency(Math.abs(financialStats.balance))}
+                    </p>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                        <p className="text-xs font-semibold text-primary-700 dark:text-primary-300 mb-1">Pendentes</p>
-                        <p className="text-2xl font-bold text-primary-700 dark:text-primary-400">{todayTasks}</p>
-                      </div>
-                      <div className="p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
-                        <p className="text-xs font-semibold text-danger-700 dark:text-danger-300 mb-1">Atrasadas</p>
-                        <p className="text-2xl font-bold text-danger-700 dark:text-danger-400">{overdueTasks}</p>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Total de Tarefas</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{tasks.length}</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        {tasks.filter(t => t.status === 'done').length} concluídas
+            </div>
+          </Card>
+
+          {/* Produtividade */}
+          <Card className={cn(
+            "p-3 sm:p-4 md:p-5 border shadow-lg overflow-hidden",
+            "bg-gradient-to-br from-warning-50 to-warning-100/80 border-warning-200/70"
+          )}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-md ring-2 ring-warning-200/50 flex-shrink-0">
+                <CheckSquare className="text-white" size={16} strokeWidth={2.5} />
+                  </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Tarefas</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-warning-700 truncate">
+                  {productivityStats.pendingTasks}
                       </p>
                     </div>
-                    <div className="p-3 bg-warning-50 dark:bg-warning-900/20 rounded-lg">
-                      <p className="text-sm font-semibold text-warning-700 dark:text-warning-300 mb-2">Em Andamento</p>
-                      <p className="text-xl font-bold text-warning-700 dark:text-warning-400">
-                        {tasks.filter(t => t.status === 'in-progress').length}
-                      </p>
-                    </div>
-                    <Link 
-                      href="/produtividade/tarefas" 
-                      onClick={(e) => e.stopPropagation()}
-                      className="block mt-4 p-3 bg-warning-600 hover:bg-warning-700 text-white text-center rounded-lg font-semibold transition-colors"
-                    >
-                      Ver página completa →
-                    </Link>
                   </div>
+          </Card>
+
+          {/* Objetivos */}
+          <Card className={cn(
+            "p-3 sm:p-4 md:p-5 border shadow-lg overflow-hidden",
+            "bg-gradient-to-br from-purple-50 to-purple-100/80 border-purple-200/70"
+          )}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md ring-2 ring-purple-200/50 flex-shrink-0">
+                <Target className="text-white" size={16} strokeWidth={2.5} />
+                    </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Objetivos</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-purple-700 truncate">
+                  {isClient ? healthStats.completedHealthGoals + financialStats.completedFinancialGoals + productivityStats.completedProductivityGoals : 0}
+                </p>
+              </div>
+              </div>
                 </Card>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid - Saúde e Produtividade */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon
-            const gradientColor = stat.color === 'from-success-500 to-success-600' ? 'from-success-50/30' :
-                                 stat.color === 'from-warning-500 to-warning-600' ? 'from-warning-50/30' :
-                                 'from-primary-50/30'
-            const cardId = stat.title.toLowerCase().replace(/\s+/g, '-')
-            
-            return (
-              <div 
-                key={stat.title}
-                className="card-flip-container animate-fade-in" 
-                style={{ animationDelay: `${0.4 + index * 0.1}s` }}
-                onClick={() => setFlippedCard(flippedCard === cardId ? null : cardId)}
-              >
-                <div className={cn('card-flip', flippedCard === cardId && 'flipped')}>
-                  {/* Frente */}
-                  <div className="card-front">
-                    <Card 
-                      className="p-5 sm:p-6 relative overflow-hidden cursor-pointer h-full"
-                    >
-                      {/* Background gradient */}
-                      <div className={cn(
-                        'absolute inset-0 bg-gradient-to-br pointer-events-none',
-                        gradientColor,
-                        'dark:opacity-20 via-transparent to-transparent'
-                      )} />
-                      
-                      <div className="flex items-center gap-2 mb-4 relative">
-                        <div className={cn(
-                          'w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ring-1',
-                          stat.color,
-                          stat.color === 'from-success-500 to-success-600' ? 'ring-success-200/50' :
-                          stat.color === 'from-warning-500 to-warning-600' ? 'ring-warning-200/50' :
-                          'ring-primary-200/50'
-                        )}>
-                          <Icon className="text-white" size={16} strokeWidth={2.5} />
-                        </div>
-                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                          {stat.title}
-                        </h2>
+              
+        {/* Grid Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          {/* Coluna Esquerda - Produtividade e Saúde */}
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
+            {/* Produtividade */}
+            <Card className="p-4 sm:p-5 md:p-6 overflow-hidden">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-lg ring-2 ring-warning-200/50">
+                    <CheckSquare className="text-white" size={20} strokeWidth={2.5} />
                       </div>
-
-                {/* Barra de progresso geral */}
-                {stat.progress !== undefined && (
-                  <div className="mb-4 relative z-10">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-xs font-bold text-slate-900">Progresso Geral</span>
-                      <span className="text-base font-bold text-slate-900">{stat.progress}%</span>
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">
+                    Produtividade
+                      </h2>
                     </div>
-                    <div className="w-full h-2.5 bg-slate-300 rounded-full overflow-hidden">
-                      <div 
-                        className={cn(
-                          'h-full rounded-full transition-all duration-500 ease-out',
-                          stat.progressColor
-                        )}
-                        style={{ width: `${stat.progress}%` }}
-                      />
-                  </div>
-                </div>
-                )}
-
-                <div className="space-y-2 relative z-10">
-                  {stat.items.map((item: any, idx) => {
-                    const hasProgress = item.progress !== undefined
-                    const itemProgress = hasProgress ? item.progress : (item.target ? Math.min((item.value / item.target) * 100, 100) : null)
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className={cn(
-                          'flex items-center justify-between p-3 rounded-lg border transition-all duration-300 group',
-                          item.warning ? 'bg-gradient-to-br from-danger-50/90 to-danger-100/80 border-danger-200/70 hover:border-danger-300/70' :
-                          item.highlight ? (item.positive ? 'bg-gradient-to-br from-success-50/90 to-success-100/80 border-success-200/70 hover:border-success-300/70' : 'bg-gradient-to-br from-danger-50/90 to-danger-100/80 border-danger-200/70 hover:border-danger-300/70') :
-                          'bg-gradient-to-br from-white/95 to-slate-50/80 border-slate-200/70 hover:border-slate-300/70',
-                          'hover:shadow-md'
-                        )}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          {item.icon && (
-                            <div className={cn(
-                              'w-10 h-10 rounded-lg flex items-center justify-center shadow-md ring-1',
-                              item.warning ? 'bg-gradient-to-br from-danger-500 to-danger-600 ring-danger-200/50' :
-                              item.highlight ? (item.positive ? 'bg-gradient-to-br from-success-500 to-success-600 ring-success-200/50' : 'bg-gradient-to-br from-danger-500 to-danger-600 ring-danger-200/50') :
-                              stat.color === 'from-success-500 to-success-600' ? `bg-gradient-to-br ${stat.color} ring-success-200/50` :
-                              stat.color === 'from-warning-500 to-warning-600' ? `bg-gradient-to-br ${stat.color} ring-warning-200/50` :
-                              `bg-gradient-to-br ${stat.color} ring-primary-200/50`,
-                              'transition-all duration-300'
-                            )}>
-                              <span className="text-lg">{item.icon}</span>
-              </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className={cn(
-                              'text-xs sm:text-sm font-semibold mb-1',
-                              item.warning ? 'text-danger-800' :
-                              item.highlight ? (item.positive ? 'text-success-800' : 'text-danger-800') :
-                              'text-slate-900 font-bold'
-                            )}>
-                              {item.label}
-                            </p>
-                            <p className={cn(
-                              'text-xl sm:text-2xl font-bold break-words',
-                              item.warning ? 'text-danger-700' :
-                              item.highlight ? (item.positive ? 'text-success-700' : 'text-danger-700') :
-                              'text-slate-900'
-                            )}>
-                              {item.value}
-                            </p>
-                            
-                            {/* Barra de progresso individual para itens com target */}
-                            {itemProgress !== null && item.target && (
-                              <div className="w-full mt-1.5">
-                                <div className="w-full h-2 bg-slate-200/60 rounded-full overflow-hidden">
-                                  <div 
-                                    className={cn(
-                                      'h-full rounded-full transition-all duration-500 ease-out',
-                                      itemProgress >= 100 ? 'bg-success-500' :
-                                      itemProgress >= 70 ? 'bg-warning-500' :
-                                      'bg-primary-500'
-                                    )}
-                                    style={{ width: `${itemProgress}%` }}
-                                  />
-                                </div>
-                                <div className="flex justify-between items-center mt-1">
-                                  <span className="text-[10px] sm:text-xs text-slate-700 font-medium">Meta: {item.target}</span>
-                                  <span className="text-[10px] sm:text-xs font-semibold text-slate-900">{Math.round(itemProgress)}%</span>
-                  </div>
-                              </div>
-                            )}
-                            
-                            {/* Barra de progresso para objetivos */}
-                            {hasProgress && (
-                              <div className="w-full mt-1.5">
-                                <div className="w-full h-2 bg-slate-200/60 dark:bg-slate-500/60 rounded-full overflow-hidden">
-                                  <div 
-                                    className={cn(
-                                      'h-full rounded-full transition-all duration-500 ease-out',
-                                      itemProgress >= 100 ? 'bg-success-500' :
-                                      itemProgress >= 70 ? stat.progressColor :
-                                      stat.progressColor
-                                    )}
-                                    style={{ width: `${itemProgress}%` }}
-                                  />
-                </div>
-              </div>
-                            )}
-                  </div>
-                </div>
-              </div>
-                    )
-                  })}
-            </div>
-                    </Card>
+                <Link
+                  href="/produtividade"
+                  className="text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  <ArrowRight size={20} />
+                </Link>
                   </div>
                   
-                  {/* Verso - Detalhamento */}
-                  <div className="card-back">
-                    <Card className="p-5 sm:p-6 relative overflow-hidden cursor-pointer">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+                <div className="p-3 bg-gradient-to-br from-primary-50 to-primary-100/80 rounded-lg border border-primary-200/70">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Pendentes</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary-700">
+                    {productivityStats.pendingTasks}
+                      </p>
+                    </div>
+                <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100/80 rounded-lg border border-blue-200/70">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Andamento</p>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-700">
+                    {productivityStats.inProgressTasks}
+                      </p>
+                    </div>
+                    <div className={cn(
+                  "p-3 rounded-lg border",
+                  productivityStats.overdueTasks > 0
+                    ? 'bg-gradient-to-br from-danger-50 to-danger-100/80 border-danger-200/70'
+                    : 'bg-gradient-to-br from-slate-50 to-slate-100/80 border-slate-200/70'
+                )}>
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Atrasadas</p>
+                  <p className={cn(
+                    "text-xl sm:text-2xl font-bold",
+                    productivityStats.overdueTasks > 0
+                      ? 'text-danger-700'
+                      : 'text-slate-700'
+                  )}>
+                    {productivityStats.overdueTasks}
+                        </p>
+                      </div>
+                <div className="p-3 bg-gradient-to-br from-success-50 to-success-100/80 rounded-lg border border-success-200/70">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Concluídas</p>
+                  <p className="text-xl sm:text-2xl font-bold text-success-700">
+                    {productivityStats.completedTasks}
+                  </p>
+                        </div>
+                      </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-4">
+                <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100/80 rounded-lg border border-purple-200/70">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BookOpen className="text-purple-600" size={14} />
+                    <p className="text-xs font-semibold text-slate-700">Pomodoros</p>
+                        </div>
+                  <p className="text-lg sm:text-xl font-bold text-purple-700">
+                    {productivityStats.totalPomodoros}
+                  </p>
+                      </div>
+                <div className="p-3 bg-gradient-to-br from-orange-50 to-orange-100/80 rounded-lg border border-orange-200/70">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FolderKanban className="text-orange-600" size={14} />
+                    <p className="text-xs font-semibold text-slate-700">Projetos</p>
+                    </div>
+                  <p className="text-lg sm:text-xl font-bold text-orange-700">
+                    {productivityStats.activeProjects}
+                          </p>
+                        </div>
+                <div className="p-3 bg-gradient-to-br from-indigo-50 to-indigo-100/80 rounded-lg border border-indigo-200/70">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="text-indigo-600" size={14} />
+                    <p className="text-xs font-semibold text-slate-700">Minutos</p>
+                      </div>
+                  <p className="text-lg sm:text-xl font-bold text-indigo-700">
+                    {productivityStats.totalStudyMinutes}
+                  </p>
+            </div>
+          </div>
+
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-slate-700">Progresso Objetivos</span>
+                  <span className="text-sm font-bold text-slate-900">
+                    {productivityStats.completedProductivityGoals}/{productivityStats.totalProductivityGoals}
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-warning-500 to-warning-600 rounded-full transition-all duration-500"
+                    style={{ width: `${productivityStats.productivityProgress}%` }}
+                  />
+              </div>
+            </div>
+          </Card>
+
+            {/* Saúde */}
+            <Card className="p-4 sm:p-5 md:p-6 overflow-hidden">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center shadow-lg ring-2 ring-success-200/50">
+                    <Heart className="text-white" size={20} strokeWidth={2.5} />
+                      </div>
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">
+                    Saúde
+                      </h2>
+                    </div>
+                <Link
+                  href="/saude"
+                  className="text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  <ArrowRight size={20} />
+                </Link>
+                  </div>
+                  
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4">
+                <div className="p-3 bg-gradient-to-br from-success-50 to-success-100/80 rounded-lg border border-success-200/70">
+                  <div className="flex items-center gap-2 mb-1">
+                    <UtensilsCrossed className="text-success-600" size={16} />
+                    <p className="text-xs font-semibold text-slate-700">Refeições Hoje</p>
+                        </div>
+                  <p className="text-xl sm:text-2xl font-bold text-success-700">
+                    {healthStats.todayMeals}
+                  </p>
+                      </div>
+                <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100/80 rounded-lg border border-blue-200/70">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Dumbbell className="text-blue-600" size={16} />
+                    <p className="text-xs font-semibold text-slate-700">Treinos Hoje</p>
+                    </div>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-700">
+                    {healthStats.todayWorkouts}
+                  </p>
+                        </div>
+                <div className="p-3 bg-gradient-to-br from-indigo-50 to-indigo-100/80 rounded-lg border border-indigo-200/70">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Moon className="text-indigo-600" size={16} />
+                    <p className="text-xs font-semibold text-slate-700">Qualidade Sono</p>
+                      </div>
+                  <p className="text-xl sm:text-2xl font-bold text-indigo-700">
+                    {healthStats.avgSleepQuality}/5
+                  </p>
+                      </div>
+                    </div>
+
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-slate-700">Progresso Objetivos</span>
+                  <span className="text-sm font-bold text-slate-900">
+                    {healthStats.completedHealthGoals}/{healthStats.totalHealthGoals}
+                  </span>
+                        </div>
+                <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-success-500 to-success-600 rounded-full transition-all duration-500"
+                    style={{ width: `${healthStats.healthProgress}%` }}
+                  />
+                      </div>
+                      </div>
+            </Card>
+                    </div>
+
+          {/* Coluna Direita - Financeiro e Tarefas */}
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
+            {/* Financeiro */}
+            <Card className="p-4 sm:p-5 md:p-6 overflow-hidden">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg ring-2 ring-primary-200/50">
+                    <DollarSign className="text-white" size={20} strokeWidth={2.5} />
+                  </div>
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">
+                    Financeiro
+                  </h2>
+                </div>
+                    <Link 
+                  href="/financeiro"
+                  className="text-primary-600 hover:text-primary-700 transition-colors"
+                    >
+                  <ArrowRight size={20} />
+                    </Link>
+        </div>
+
+              <div className="space-y-3 mb-4">
                       <div className={cn(
-                        'absolute inset-0 bg-gradient-to-br pointer-events-none',
-                        gradientColor,
-                        'dark:opacity-20 via-transparent to-transparent'
-                      )} />
-                      
+                  "p-3 rounded-lg border",
+                  financialStats.balance >= 0
+                    ? 'bg-gradient-to-br from-success-50 to-success-100/80 border-success-200/70'
+                    : 'bg-gradient-to-br from-danger-50 to-danger-100/80 border-danger-200/70'
+                )}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-700">Saldo Total</p>
+                    {financialStats.balance >= 0 ? (
+                      <TrendingUp className="text-success-600" size={16} />
+                    ) : (
+                      <TrendingDown className="text-danger-600" size={16} />
+                    )}
+                        </div>
+                  <p className={cn(
+                    "text-xl sm:text-2xl font-bold mt-1",
+                    financialStats.balance >= 0
+                      ? 'text-success-700'
+                      : 'text-danger-700'
+                  )}>
+                    {formatCurrency(Math.abs(financialStats.balance))}
+                  </p>
+                      </div>
+
+                <div className="p-3 bg-gradient-to-br from-success-50 to-success-100/80 rounded-lg border border-success-200/70">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Receitas</p>
+                  <p className="text-lg sm:text-xl font-bold text-success-700">
+                    {formatCurrency(financialStats.totalIncome)}
+                  </p>
+                    </div>
+
+                <div className="p-3 bg-gradient-to-br from-danger-50 to-danger-100/80 rounded-lg border border-danger-200/70">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">Despesas</p>
+                  <p className="text-lg sm:text-xl font-bold text-danger-700">
+                    {formatCurrency(financialStats.totalExpenses)}
+                  </p>
+              </div>
+
+                {financialStats.totalInvested > 0 && (
+                  <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100/80 rounded-lg border border-purple-200/70">
+                    <p className="text-xs font-semibold text-slate-700 mb-1">Investimentos</p>
+                    <p className="text-lg sm:text-xl font-bold text-purple-700">
+                      {formatCurrency(financialStats.totalCurrentValue)}
+                            </p>
+                            <p className={cn(
+                      "text-xs font-medium mt-1",
+                      financialStats.investmentReturn >= 0
+                        ? 'text-success-600'
+                        : 'text-danger-600'
+                    )}>
+                      {financialStats.investmentReturn >= 0 ? '+' : ''}
+                      {formatCurrency(Math.abs(financialStats.investmentReturn))} (
+                      {financialStats.investmentReturnPercent >= 0 ? '+' : ''}
+                      {financialStats.investmentReturnPercent}%)
+                    </p>
+                              </div>
+                            )}
+              </div>
+
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-slate-700">Progresso Metas</span>
+                  <span className="text-sm font-bold text-slate-900">
+                    {financialStats.completedFinancialGoals}/{financialStats.totalFinancialGoals}
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500"
+                    style={{ width: `${financialStats.financialProgress}%` }}
+                                  />
+                </div>
+            </div>
+                    </Card>
+
+            {/* Tarefas Urgentes */}
+            <Card className="p-4 sm:p-5 md:p-6 overflow-hidden">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <div className={cn(
-                            'w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ring-1',
-                            stat.color,
-                            stat.color === 'from-success-500 to-success-600' ? 'ring-success-200/50' :
-                            stat.color === 'from-warning-500 to-warning-600' ? 'ring-warning-200/50' :
-                            'ring-primary-200/50'
-                          )}>
-                            <Icon className="text-white" size={16} strokeWidth={2.5} />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-lg ring-2 ring-warning-200/50">
+                    <AlertCircle className="text-white" size={20} strokeWidth={2.5} />
                           </div>
                           <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                            Detalhes de {stat.title}
+                    Tarefas Urgentes
                           </h2>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setFlippedCard(null)
-                          }}
-                          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                        >
-                          <X size={20} className="text-slate-600 dark:text-slate-300" />
-                        </button>
+                <Link
+                  href="/produtividade/tarefas"
+                  className="text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  <ArrowRight size={20} />
+                </Link>
                       </div>
                       
-                      <div className="space-y-3">
-                        {stat.progress !== undefined && (
-                          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Progresso Geral</p>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.progress}%</p>
-                            <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-2">
-                              <div 
-                                className={cn('h-full rounded-full transition-all duration-500', stat.progressColor)}
-                                style={{ width: `${stat.progress}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        {stat.items.map((item: any, idx: number) => (
-                          <div key={idx} className="p-3 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {item.icon && <span className="text-lg">{item.icon}</span>}
-                                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{item.label}</p>
-                              </div>
+              <div className="space-y-2">
+                {recentTasks.length > 0 ? (
+                  recentTasks.map((task) => {
+                    const isOverdue = task.dueDate && isPast(new Date(task.dueDate))
+                    return (
+                      <Link
+                        key={task.id}
+                        href="/produtividade/tarefas"
+                        className="block p-3 bg-gradient-to-r from-slate-50 to-slate-100/80 rounded-lg border border-slate-200/70 hover:bg-slate-100 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 mb-1 line-clamp-1">
+                              {task.title}
+                            </p>
+                            {task.dueDate && (
                               <p className={cn(
-                                'text-lg font-bold',
-                                item.warning ? 'text-danger-700 dark:text-danger-400' :
-                                item.highlight ? (item.positive ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400') :
-                                'text-slate-900 dark:text-white'
+                                "text-xs font-medium flex items-center gap-1",
+                                isOverdue
+                                  ? 'text-danger-600'
+                                  : 'text-slate-600'
                               )}>
-                                {item.value}
-                              </p>
-                            </div>
-                            {item.target && (
-                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                                Meta: {item.target}
+                                <Calendar size={12} />
+                                {format(new Date(task.dueDate), "dd 'de' MMM", { locale: ptBR })}
+                                {isOverdue && ' (Atrasada)'}
                               </p>
                             )}
                           </div>
-                        ))}
-                        <Link 
-                          href={stat.href} 
-                          onClick={(e) => e.stopPropagation()}
-                          className={cn(
-                            "block mt-4 p-3 text-white text-center rounded-lg font-semibold transition-colors",
-                            stat.color === 'from-success-500 to-success-600' ? 'bg-success-600 hover:bg-success-700' :
-                            stat.color === 'from-warning-500 to-warning-600' ? 'bg-warning-600 hover:bg-warning-700' :
-                            'bg-primary-600 hover:bg-primary-700'
+                          {isOverdue && (
+                            <AlertCircle className="text-danger-600 flex-shrink-0" size={16} />
                           )}
-                        >
-                          Ver página completa →
+                        </div>
                         </Link>
+                    )
+                  })
+                ) : (
+                  <p className="text-sm text-slate-500 text-center py-4">
+                    Nenhuma tarefa urgente
+                  </p>
+                )}
                       </div>
                     </Card>
                   </div>
-                </div>
-              </div>
-            )
-          })}
         </div>
 
-        {/* Quick Actions */}
-        <Card className="p-4 sm:p-5 animate-fade-in" style={{ animationDelay: '0.7s' }}>
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 text-center">
+        {/* Ações Rápidas */}
+        <Card className="p-4 sm:p-5 md:p-6 overflow-hidden">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-purple-200/50">
+              <Zap className="text-white" size={20} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">
             Ações Rápidas
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {[
-              { label: 'Adicionar Refeição', href: '/saude/alimentacao', icon: Heart, color: 'from-success-500 to-success-600' },
-              { label: 'Registrar Treino', href: '/saude/treino', icon: Heart, color: 'from-pink-500 to-rose-500' },
-              { label: 'Nova Transação', href: '/financeiro/transacoes', icon: DollarSign, color: 'from-primary-500 to-primary-600' },
-              { label: 'Nova Tarefa', href: '/produtividade/tarefas', icon: CheckSquare, color: 'from-warning-500 to-warning-600' },
+              {
+                label: 'Nova Transação',
+                href: '/financeiro/transacoes',
+                icon: DollarSign,
+                color: 'from-primary-500 to-primary-600',
+                bgColor: 'from-primary-50 to-primary-100/80',
+              },
+              {
+                label: 'Nova Tarefa',
+                href: '/produtividade/tarefas',
+                icon: CheckSquare,
+                color: 'from-warning-500 to-warning-600',
+                bgColor: 'from-warning-50 to-warning-100/80',
+              },
+              {
+                label: 'Registrar Treino',
+                href: '/saude/treino',
+                icon: Dumbbell,
+                color: 'from-pink-500 to-rose-500',
+                bgColor: 'from-pink-50 to-rose-100/80',
+              },
+              {
+                label: 'Adicionar Refeição',
+                href: '/saude/alimentacao',
+                icon: UtensilsCrossed,
+                color: 'from-success-500 to-success-600',
+                bgColor: 'from-success-50 to-success-100/80',
+              },
             ].map((action, idx) => {
               const ActionIcon = action.icon
               return (
@@ -747,30 +723,27 @@ export default function Dashboard() {
                   key={action.label}
                   href={action.href}
                   className={cn(
-                    'group relative p-3 bg-gradient-to-br from-white/95 dark:from-slate-500/90 to-slate-50/80 dark:to-slate-500/70 rounded-lg',
-                    'border border-slate-200/70 dark:border-slate-500/60 hover:border-primary-200/50 dark:hover:border-primary-500/70',
-                    'hover:shadow-md transition-all duration-300',
-                    'animate-fade-in flex flex-col items-center justify-center'
+                    'group relative p-3 sm:p-4 bg-gradient-to-br rounded-xl border border-slate-200/70 transition-all duration-300',
+                    action.bgColor,
+                    'hover:shadow-lg hover:scale-105 active:scale-95',
+                    'flex flex-col items-center justify-center gap-2 sm:gap-3'
                   )}
-                  style={{ 
-                    animationDelay: `${0.8 + idx * 0.1}s`,
-                  }}
                 >
                   <div className={cn(
-                    'w-9 h-9 rounded-lg bg-gradient-to-br mb-2',
+                    'w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg ring-1 ring-white/50 transition-all duration-300',
                     action.color,
-                    'flex items-center justify-center shadow-md ring-1 ring-white/50 dark:ring-slate-700/50 transition-all duration-300 mx-auto'
+                    'group-hover:scale-110'
                   )}>
                     <ActionIcon className="text-white" size={18} strokeWidth={2.5} />
                   </div>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-primary-600/80 transition-colors duration-300 text-center">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-900 text-center leading-tight">
                     {action.label}
                   </p>
             </Link>
               )
             })}
           </div>
-        </Card>
+          </Card>
       </div>
     </MainLayout>
   )
