@@ -215,6 +215,7 @@ export default function Dashboard() {
 
   // Tarefas recentes e urgentes
   const recentTasks = useMemo(() => {
+    if (!isClient) return []
     return tasks
       .filter(t => t.status !== 'done')
       .sort((a, b) => {
@@ -226,7 +227,7 @@ export default function Dashboard() {
         return 0
       })
       .slice(0, 5)
-  }, [tasks])
+  }, [tasks, isClient])
 
   // Transações recentes
   const recentTransactions = useMemo(() => {
@@ -268,7 +269,7 @@ export default function Dashboard() {
                     </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Saúde</p>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-success-700 truncate">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-success-700 truncate" suppressHydrationWarning>
                   {healthStats.healthProgress}%
                 </p>
                   </div>
@@ -298,7 +299,7 @@ export default function Dashboard() {
                   financialStats.balance >= 0
                     ? 'text-primary-700'
                     : 'text-danger-700'
-                )}>
+                )} suppressHydrationWarning>
                   {formatCurrency(Math.abs(financialStats.balance))}
                     </p>
                   </div>
@@ -316,7 +317,7 @@ export default function Dashboard() {
                   </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Tarefas</p>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-warning-700 truncate">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-warning-700 truncate" suppressHydrationWarning>
                   {productivityStats.pendingTasks}
                       </p>
                     </div>
@@ -334,7 +335,7 @@ export default function Dashboard() {
                     </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-0.5 truncate">Objetivos</p>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-purple-700 truncate">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-purple-700 truncate" suppressHydrationWarning>
                   {isClient ? healthStats.completedHealthGoals + financialStats.completedFinancialGoals + productivityStats.completedProductivityGoals : 0}
                 </p>
               </div>
@@ -368,13 +369,13 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
                 <div className="p-3 bg-gradient-to-br from-primary-50 to-primary-100/80 rounded-lg border border-primary-200/70">
                   <p className="text-xs font-semibold text-slate-700 mb-1">Pendentes</p>
-                  <p className="text-xl sm:text-2xl font-bold text-primary-700">
+                  <p className="text-xl sm:text-2xl font-bold text-primary-700" suppressHydrationWarning>
                     {productivityStats.pendingTasks}
                       </p>
                     </div>
                 <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100/80 rounded-lg border border-blue-200/70">
                   <p className="text-xs font-semibold text-slate-700 mb-1">Andamento</p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-700">
+                  <p className="text-xl sm:text-2xl font-bold text-blue-700" suppressHydrationWarning>
                     {productivityStats.inProgressTasks}
                       </p>
                     </div>
@@ -390,13 +391,13 @@ export default function Dashboard() {
                     productivityStats.overdueTasks > 0
                       ? 'text-danger-700'
                       : 'text-slate-700'
-                  )}>
+                  )} suppressHydrationWarning>
                     {productivityStats.overdueTasks}
                         </p>
                       </div>
                 <div className="p-3 bg-gradient-to-br from-success-50 to-success-100/80 rounded-lg border border-success-200/70">
                   <p className="text-xs font-semibold text-slate-700 mb-1">Concluídas</p>
-                  <p className="text-xl sm:text-2xl font-bold text-success-700">
+                  <p className="text-xl sm:text-2xl font-bold text-success-700" suppressHydrationWarning>
                     {productivityStats.completedTasks}
                   </p>
                         </div>
@@ -408,7 +409,7 @@ export default function Dashboard() {
                     <BookOpen className="text-purple-600" size={14} />
                     <p className="text-xs font-semibold text-slate-700">Pomodoros</p>
                         </div>
-                  <p className="text-lg sm:text-xl font-bold text-purple-700">
+                  <p className="text-lg sm:text-xl font-bold text-purple-700" suppressHydrationWarning>
                     {productivityStats.totalPomodoros}
                   </p>
                       </div>
@@ -417,7 +418,7 @@ export default function Dashboard() {
                     <FolderKanban className="text-orange-600" size={14} />
                     <p className="text-xs font-semibold text-slate-700">Projetos</p>
                     </div>
-                  <p className="text-lg sm:text-xl font-bold text-orange-700">
+                  <p className="text-lg sm:text-xl font-bold text-orange-700" suppressHydrationWarning>
                     {productivityStats.activeProjects}
                           </p>
                         </div>
@@ -426,7 +427,7 @@ export default function Dashboard() {
                     <Clock className="text-indigo-600" size={14} />
                     <p className="text-xs font-semibold text-slate-700">Minutos</p>
                       </div>
-                  <p className="text-lg sm:text-xl font-bold text-indigo-700">
+                  <p className="text-lg sm:text-xl font-bold text-indigo-700" suppressHydrationWarning>
                     {productivityStats.totalStudyMinutes}
                   </p>
             </div>
@@ -435,7 +436,7 @@ export default function Dashboard() {
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-semibold text-slate-700">Progresso Objetivos</span>
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-sm font-bold text-slate-900" suppressHydrationWarning>
                     {productivityStats.completedProductivityGoals}/{productivityStats.totalProductivityGoals}
                   </span>
                 </div>
@@ -473,7 +474,7 @@ export default function Dashboard() {
                     <UtensilsCrossed className="text-success-600" size={16} />
                     <p className="text-xs font-semibold text-slate-700">Refeições Hoje</p>
                         </div>
-                  <p className="text-xl sm:text-2xl font-bold text-success-700">
+                  <p className="text-xl sm:text-2xl font-bold text-success-700" suppressHydrationWarning>
                     {healthStats.todayMeals}
                   </p>
                       </div>
@@ -482,7 +483,7 @@ export default function Dashboard() {
                     <Dumbbell className="text-blue-600" size={16} />
                     <p className="text-xs font-semibold text-slate-700">Treinos Hoje</p>
                     </div>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-700">
+                  <p className="text-xl sm:text-2xl font-bold text-blue-700" suppressHydrationWarning>
                     {healthStats.todayWorkouts}
                   </p>
                         </div>
@@ -491,7 +492,7 @@ export default function Dashboard() {
                     <Moon className="text-indigo-600" size={16} />
                     <p className="text-xs font-semibold text-slate-700">Qualidade Sono</p>
                       </div>
-                  <p className="text-xl sm:text-2xl font-bold text-indigo-700">
+                  <p className="text-xl sm:text-2xl font-bold text-indigo-700" suppressHydrationWarning>
                     {healthStats.avgSleepQuality}/5
                   </p>
                       </div>
@@ -500,7 +501,7 @@ export default function Dashboard() {
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-semibold text-slate-700">Progresso Objetivos</span>
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-sm font-bold text-slate-900" suppressHydrationWarning>
                     {healthStats.completedHealthGoals}/{healthStats.totalHealthGoals}
                   </span>
                         </div>
@@ -555,21 +556,21 @@ export default function Dashboard() {
                     financialStats.balance >= 0
                       ? 'text-success-700'
                       : 'text-danger-700'
-                  )}>
+                  )} suppressHydrationWarning>
                     {formatCurrency(Math.abs(financialStats.balance))}
                   </p>
                       </div>
 
                 <div className="p-3 bg-gradient-to-br from-success-50 to-success-100/80 rounded-lg border border-success-200/70">
                   <p className="text-xs font-semibold text-slate-700 mb-1">Receitas</p>
-                  <p className="text-lg sm:text-xl font-bold text-success-700">
+                  <p className="text-lg sm:text-xl font-bold text-success-700" suppressHydrationWarning>
                     {formatCurrency(financialStats.totalIncome)}
                   </p>
                     </div>
 
                 <div className="p-3 bg-gradient-to-br from-danger-50 to-danger-100/80 rounded-lg border border-danger-200/70">
                   <p className="text-xs font-semibold text-slate-700 mb-1">Despesas</p>
-                  <p className="text-lg sm:text-xl font-bold text-danger-700">
+                  <p className="text-lg sm:text-xl font-bold text-danger-700" suppressHydrationWarning>
                     {formatCurrency(financialStats.totalExpenses)}
                   </p>
               </div>
@@ -577,7 +578,7 @@ export default function Dashboard() {
                 {financialStats.totalInvested > 0 && (
                   <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100/80 rounded-lg border border-purple-200/70">
                     <p className="text-xs font-semibold text-slate-700 mb-1">Investimentos</p>
-                    <p className="text-lg sm:text-xl font-bold text-purple-700">
+                      <p className="text-lg sm:text-xl font-bold text-purple-700" suppressHydrationWarning>
                       {formatCurrency(financialStats.totalCurrentValue)}
                             </p>
                             <p className={cn(
@@ -598,7 +599,7 @@ export default function Dashboard() {
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-semibold text-slate-700">Progresso Metas</span>
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-sm font-bold text-slate-900" suppressHydrationWarning>
                     {financialStats.completedFinancialGoals}/{financialStats.totalFinancialGoals}
                   </span>
                 </div>
@@ -631,7 +632,11 @@ export default function Dashboard() {
                       </div>
                       
               <div className="space-y-2">
-                {recentTasks.length > 0 ? (
+                {!isClient ? (
+                  <p className="text-sm text-slate-500 text-center py-4">
+                    Carregando...
+                  </p>
+                ) : recentTasks.length > 0 ? (
                   recentTasks.map((task) => {
                     const isOverdue = task.dueDate && isPast(new Date(task.dueDate))
                     return (
@@ -723,16 +728,15 @@ export default function Dashboard() {
                   key={action.label}
                   href={action.href}
                   className={cn(
-                    'group relative p-3 sm:p-4 bg-gradient-to-br rounded-xl border border-slate-200/70 transition-all duration-300',
+                    'group relative p-3 sm:p-4 bg-gradient-to-br rounded-xl border border-slate-200/70',
                     action.bgColor,
-                    'hover:shadow-lg hover:scale-105 active:scale-95',
+                    'hover:shadow-md active:scale-95',
                     'flex flex-col items-center justify-center gap-2 sm:gap-3'
                   )}
                 >
                   <div className={cn(
-                    'w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg ring-1 ring-white/50 transition-all duration-300',
-                    action.color,
-                    'group-hover:scale-110'
+                    'w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-md',
+                    action.color
                   )}>
                     <ActionIcon className="text-white" size={18} strokeWidth={2.5} />
                   </div>

@@ -6,7 +6,8 @@
 
 @layer base {
   * {
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent !important;
+    tap-highlight-color: transparent;
   }
   
   body {
@@ -18,9 +19,26 @@
     background-attachment: fixed;
   }
   
-  /* Melhorar touch em mobile */
+  /* Melhorar touch em mobile e remover efeitos de clique */
   button, a {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent !important;
+    tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  
+  /* Remover efeito de clique especificamente do menu */
+  nav a, nav button, aside a, aside button {
+    -webkit-tap-highlight-color: transparent !important;
+    tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none;
+    outline: none !important;
+  }
+  
+  nav a:active, nav button:active, aside a:active, aside button:active {
+    -webkit-tap-highlight-color: transparent !important;
+    tap-highlight-color: transparent !important;
   }
   
   /* Seleção de texto personalizada */
@@ -35,7 +53,6 @@
     box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04), 
                 0 8px 16px -4px rgba(0, 0, 0, 0.02),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-    will-change: transform;
   }
   
   .card-hover {
@@ -173,7 +190,6 @@
   min-height: 400px;
   transition: transform 0.3s ease-out;
   transform-style: preserve-3d;
-  will-change: transform;
   cursor: pointer;
 }
 
@@ -285,6 +301,55 @@
   @apply bg-slate-400;
   background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
   background-clip: padding-box;
+}
+
+/* Remover completamente efeito de clique azul do menu e garantir navegação instantânea */
+aside nav a,
+aside nav button,
+aside a,
+aside button {
+  -webkit-tap-highlight-color: transparent !important;
+  tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+aside nav a:active,
+aside nav button:active,
+aside a:active,
+aside button:active,
+aside nav a:focus,
+aside nav button:focus,
+aside a:focus,
+aside button:focus,
+aside nav a:focus-visible,
+aside nav button:focus-visible,
+aside a:focus-visible,
+aside button:focus-visible {
+  -webkit-tap-highlight-color: transparent !important;
+  tap-highlight-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  ring: 0 !important;
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-width: 0px !important;
+  transition: none !important;
+}
+
+/* Remover ring do Tailwind */
+aside nav a *,
+aside nav button *,
+aside a *,
+aside button * {
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-width: 0px !important;
 }
 
 /* Scrollbar fina para sidebar */
