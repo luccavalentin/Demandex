@@ -32,7 +32,7 @@ import ptBR from 'date-fns/locale/pt-BR'
 import Link from 'next/link'
 import { cn, formatCurrency } from '@/lib/utils'
 
-export default function Dashboard() {
+export default function Dashboard(): JSX.Element {
   const [isClient, setIsClient] = useState(false)
   const {
     meals,

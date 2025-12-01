@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback, startTransition } from 'react'
+import React, { useState, useEffect, useCallback, startTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -9,7 +9,7 @@ import {
   DollarSign,
   CheckSquare,
   Sparkles,
-  Bell,
+  Settings,
   Menu,
   X,
   UtensilsCrossed,
@@ -25,7 +25,6 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useStore } from '@/lib/store'
 import { Logo } from '@/components/UI/Logo'
 import { useSidebar } from './MainLayout'
 
@@ -92,9 +91,6 @@ export const Sidebar: React.FC = () => {
   const { isCollapsed, setIsCollapsed } = useSidebar()
   const pathname = usePathname()
   const router = useRouter()
-  const { notifications } = useStore()
-
-  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications])
 
   useEffect(() => {
     // Fecha o menu mobile quando a rota muda
@@ -558,11 +554,11 @@ export const Sidebar: React.FC = () => {
               )
             })}
 
-            {/* Notificações */}
+            {/* Configurações */}
           {!isCollapsed && (
             <div className="pt-3 mt-2 border-t border-slate-200/40">
             <Link
-              href="/notificacoes"
+              href="/configuracoes"
               onClick={(e) => {
                 // Fecha menu mobile sem bloquear navegação usando startTransition
                 startTransition(() => {
@@ -575,15 +571,15 @@ export const Sidebar: React.FC = () => {
                   'text-base font-semibold',
                   'focus:outline-none focus:ring-0',
                   'cursor-pointer select-none active:scale-100',
-                isActive('/notificacoes')
-                    ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-md'
+                isActive('/configuracoes')
+                    ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-md'
                     : 'text-slate-700'
                 )}
               >
                 <div className="relative">
-                  {isActive('/notificacoes') ? (
+                  {isActive('/configuracoes') ? (
                     <div className="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center">
-                      <Bell
+                      <Settings
                         size={21}
                         strokeWidth={2.5}
                         className="text-white"
@@ -591,23 +587,18 @@ export const Sidebar: React.FC = () => {
                     </div>
                   ) : (
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/80 shadow-sm flex items-center justify-center">
-                      <Bell
+                      <Settings
                         size={21}
                         strokeWidth={2.5}
-                        className="text-yellow-500"
+                        className="text-slate-600"
                       />
                     </div>
                   )}
-              {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md ring-1 ring-white">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
                 </div>
                 <span className={cn(
                   "truncate",
-                  isActive('/notificacoes') ? "text-white" : "text-slate-700"
-                )}>Notificações</span>
+                  isActive('/configuracoes') ? "text-white" : "text-slate-700"
+                )}>Configurações</span>
             </Link>
         </div>
           )}
